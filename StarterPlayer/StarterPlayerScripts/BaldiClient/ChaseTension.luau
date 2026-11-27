@@ -21,7 +21,7 @@ function ChaseTension.init(ctx)
 	local inRound = false
 	local exitOpen = false
 	local hunterRoot = nil
-	local hunterName = "ChatRevive" -- per round; Impersonator sends Sportage
+	local hunterName = "ChatRevive" -- per round (GameStarted sends the mode's hunter)
 
 	local customLoopId = ctx.assets.SOUNDS and ctx.assets.SOUNDS.tension or ""
 	local loopSound = nil

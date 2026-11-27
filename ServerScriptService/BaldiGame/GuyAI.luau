@@ -5,7 +5,7 @@
 	map's notebook spawn points. Try to collect him and:
 	  - JUMPSCARE (GuyReveal flash on your screen, brief freeze)
 	  - a loud SCREEE the hunter homes in on (ChatRevive gets an alert
-	    burst; Sportage hears it outright)
+	    burst)
 	  - Guy scurries off, then poses somewhere new
 
 	The tell: his fake notebook bobs noticeably faster than a real one
@@ -139,11 +139,9 @@ function GuyAI.init(ctx)
 				local nowCharacter = player.Character
 				local nowHrp = nowCharacter and nowCharacter:FindFirstChild("HumanoidRootPart")
 				local silver = ctx.npcs.Silver
-				local sportage = ctx.npcs.Sportage
 				if nowHrp and ctx.manager.isParticipant(player)
 					and not ctx.detention.isDetained(player)
-					and not (silver and silver.isGrabbing and silver.isGrabbing(player))
-					and not (sportage and sportage.isTrapped and sportage.isTrapped(player)) then
+					and not (silver and silver.isGrabbing and silver.isGrabbing(player)) then
 					nowHrp.Anchored = false
 				end
 			end)
@@ -153,10 +151,6 @@ function GuyAI.init(ctx)
 		local chatRevive = ctx.npcs.ChatRevive
 		if chatRevive and chatRevive.alertBurst and not chatRevive.base.parked then
 			chatRevive.alertBurst(cfg.PING_SECONDS)
-		end
-		local sportage = ctx.npcs.Sportage
-		if sportage and sportage.hear and not sportage.base.parked then
-			sportage.hear(position, cfg.PING_SECONDS)
 		end
 	end
 
@@ -300,9 +294,7 @@ function GuyAI.init(ctx)
 			return false
 		end
 		local silver = ctx.npcs.Silver
-		local sportage = ctx.npcs.Sportage
-		if (silver and silver.isGrabbing and silver.isGrabbing(player))
-			or (sportage and sportage.isTrapped and sportage.isTrapped(player)) then
+		if silver and silver.isGrabbing and silver.isGrabbing(player) then
 			return false
 		end
 		self._failCooldown = self._failCooldown or setmetatable({}, { __mode = "k" })
@@ -334,11 +326,9 @@ function GuyAI.init(ctx)
 				local nowCharacter = player.Character
 				local nowHrp = nowCharacter and nowCharacter:FindFirstChild("HumanoidRootPart")
 				local silverNow = ctx.npcs.Silver
-				local sportageNow = ctx.npcs.Sportage
 				if nowHrp and ctx.manager.isParticipant(player)
 					and not ctx.detention.isDetained(player)
-					and not (silverNow and silverNow.isGrabbing and silverNow.isGrabbing(player))
-					and not (sportageNow and sportageNow.isTrapped and sportageNow.isTrapped(player)) then
+					and not (silverNow and silverNow.isGrabbing and silverNow.isGrabbing(player)) then
 					nowHrp.Anchored = false
 				end
 			end)
@@ -346,9 +336,6 @@ function GuyAI.init(ctx)
 		local chatRevive = ctx.npcs.ChatRevive
 		if chatRevive and chatRevive.alertBurst and not chatRevive.base.parked then
 			chatRevive.alertBurst(cfg.PING_SECONDS)
-		end
-		if hrp and sportage and sportage.hear and not sportage.base.parked then
-			sportage.hear(hrp.Position, cfg.PING_SECONDS)
 		end
 		return true
 	end

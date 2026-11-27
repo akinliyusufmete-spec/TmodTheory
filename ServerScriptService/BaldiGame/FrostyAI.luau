@@ -281,11 +281,9 @@ function FrostyAI.init(ctx)
 		-- detained or grabbed meanwhile is another system's business
 		local hrp = rootOf(player)
 		local silver = ctx.npcs.Silver
-		local sportage = ctx.npcs.Sportage
 		if hrp and ctx.manager and ctx.manager.isParticipant(player)
 			and not ctx.detention.isDetained(player)
-			and not (silver and silver.isGrabbing and silver.isGrabbing(player))
-			and not (sportage and sportage.isTrapped and sportage.isTrapped(player)) then
+			and not (silver and silver.isGrabbing and silver.isGrabbing(player)) then
 			hrp.Anchored = false
 		end
 		if player.Parent then

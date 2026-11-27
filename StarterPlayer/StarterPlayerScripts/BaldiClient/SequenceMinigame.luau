@@ -1,10 +1,10 @@
 --[[
 	SequenceMinigame (ModuleScript, StarterPlayerScripts.BaldiClient.SequenceMinigame)
 
-	Purple notebooks + Impersonator mode (StarterGui.SequenceMinigameGui).
+	Purple notebooks (StarterGui.SequenceMinigameGui).
 	A pattern of your USE / SWAP keys flashes in Panel.BoxRow (one box per
 	symbol, cloned from Templates.BoxTemplate) — memorize it, then press it
-	back in order. A wrong press is LOUD (Sportage hears it) and the preview
+	back in order. A wrong press is LOUD (Guy may react to it) and the preview
 	replays. Touch players get Use/Swap tap buttons (MobileTaps). The panel
 	slides in from below.
 
@@ -156,7 +156,7 @@ function SequenceMinigame.init(ctx)
 				close(false)
 			end
 		else
-			-- LOUD. Sportage heard that. Watch it again...
+			-- LOUD. Watch it again...
 			sounds.play("error", 0.6)
 			phaseLabel.Text = "WRONG — he heard that!"
 			ctx.remotes.NotebookMinigameAction:FireServer("noise")
