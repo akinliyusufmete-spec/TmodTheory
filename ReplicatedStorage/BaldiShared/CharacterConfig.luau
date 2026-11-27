@@ -272,14 +272,43 @@ CharacterConfig.Settings = {
 
 local resolved = {}
 
+-- EVIL Theory twins are named after the original plus a suffix
+-- ("ChatReviveEvil"); ModifierConfig.LIST.EvilTheory.SUFFIX names it.
+local TWIN_SUFFIX = "Evil"
+do
+	local modifierModule = script.Parent:FindFirstChild("ModifierConfig")
+	local ok, modifierConfig = pcall(function()
+		return modifierModule and require(modifierModule)
+	end)
+	local def = ok and type(modifierConfig) == "table" and modifierConfig.LIST and modifierConfig.LIST.EvilTheory
+	if def and type(def.SUFFIX) == "string" and def.SUFFIX ~= "" then
+		TWIN_SUFFIX = def.SUFFIX
+	end
+end
+CharacterConfig.TWIN_SUFFIX = TWIN_SUFFIX
+
+-- The character a name belongs to: an evil twin "ChatReviveEvil" is
+-- "ChatRevive" (a name with its own entry is always itself).
+function CharacterConfig.baseName(name)
+	name = tostring(name or "")
+	if CharacterConfig.Characters[name] == nil and #name > #TWIN_SUFFIX
+		and name:sub(-#TWIN_SUFFIX) == TWIN_SUFFIX then
+		return name:sub(1, #name - #TWIN_SUFFIX)
+	end
+	return name
+end
+
 -- The full config for one character, with every missing field filled in
--- from Defaults. Treat the result as read-only (it's shared).
+-- from Defaults. Treat the result as read-only (it's shared). An evil twin
+-- gets its original's config (DisplayName marked "(Evil)").
 function CharacterConfig.get(name)
 	local cached = resolved[name]
 	if cached then
 		return cached
 	end
-	local entry = CharacterConfig.Characters[name] or {}
+	local baseName = CharacterConfig.baseName(name)
+	local isTwin = baseName ~= name
+	local entry = CharacterConfig.Characters[baseName] or {}
 	local merged = {}
 	for key, value in pairs(CharacterConfig.Defaults) do
 		merged[key] = value
@@ -288,7 +317,10 @@ function CharacterConfig.get(name)
 		merged[key] = value
 	end
 	merged.Name = name
-	merged.DisplayName = entry.DisplayName or name
+	merged.DisplayName = entry.DisplayName or baseName
+	if isTwin then
+		merged.DisplayName = merged.DisplayName .. " (Evil)"
+	end
 	resolved[name] = merged
 	return merged
 end

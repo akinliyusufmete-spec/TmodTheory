@@ -24,6 +24,7 @@ local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local AssetResolver = require(script.Parent.AssetResolver)
+local NpcRoster = require(script.Parent.NpcRoster)
 
 local NotebookSpawner = {}
 
@@ -131,6 +132,17 @@ function NotebookSpawner.init(ctx)
 			return c.MAX_SECONDS or 45, c.CANCEL_DISTANCE or 12
 		end
 		return minigameCfg.MAX_SECONDS, minigameCfg.CANCEL_DISTANCE
+	end
+
+	-- a failed minigame may summon Guy's haunt: the first Guy in play that
+	-- takes it (the original, else an EVIL twin) does it — never both at once
+	local function guyFail(player)
+		for _, guy in ipairs(NpcRoster.named(ctx, "Guy")) do
+			if guy.onNotebookFail and guy.onNotebookFail(player) then
+				return true
+			end
+		end
+		return false
 	end
 
 	-- ===================== notebook minigames =====================
@@ -316,9 +328,7 @@ function NotebookSpawner.init(ctx)
 			if ctx.badges then
 				ctx.badges.noteModstatFailed(player) -- a slip in the sequence lock
 			end
-			if ctx.npcs.Guy and ctx.npcs.Guy.onNotebookFail then
-				ctx.npcs.Guy.onNotebookFail(player)
-			end
+			guyFail(player)
 		elseif action == "done" and session.kind == "sequence" then
 			if os.clock() - session.startedAt < (session.minSeconds or 0) * 0.6 then
 				clearSession(player, true)
@@ -350,9 +360,7 @@ function NotebookSpawner.init(ctx)
 						clearSession(player, true)
 					end
 				end)
-				if ctx.npcs.Guy and ctx.npcs.Guy.onNotebookFail then
-					ctx.npcs.Guy.onNotebookFail(player)
-				end
+				guyFail(player)
 			end
 
 		-- ---- memory ----
@@ -372,9 +380,7 @@ function NotebookSpawner.init(ctx)
 					ctx.badges.noteModstatFailed(player)
 				end
 				clearSession(player, true)
-				if ctx.npcs.Guy and ctx.npcs.Guy.onNotebookFail then
-					ctx.npcs.Guy.onNotebookFail(player)
-				end
+				guyFail(player)
 				return
 			end
 			for i, v in ipairs(session.sequence) do
@@ -383,9 +389,7 @@ function NotebookSpawner.init(ctx)
 						ctx.badges.noteModstatFailed(player)
 					end
 					clearSession(player, true)
-					if ctx.npcs.Guy and ctx.npcs.Guy.onNotebookFail then
-						ctx.npcs.Guy.onNotebookFail(player)
-					end
+					guyFail(player)
 					return
 				end
 			end

@@ -21,6 +21,7 @@ local RunService = game:GetService("RunService")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 local SoundLoader = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("SoundLoader"))
 
 local LpAI = {}
@@ -28,17 +29,23 @@ local LpAI = {}
 local COLOR_BODY = Color3.fromRGB(35, 50, 120)
 local COLOR_HEAD = Color3.fromRGB(225, 200, 170)
 
-function LpAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function LpAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.LP
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(120, 150, 255),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.LP,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.LP + (opts.spawnOffset or Vector3.zero),
 		(cfg.ROAM_SPEED + cfg.CHASE_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -191,11 +198,10 @@ function LpAI.init(ctx)
 		if not base:isActive() or not ctx.manager or not ctx.manager.isRoundActive() then
 			return
 		end
-		local silver = ctx.npcs.Silver
 		for _, player in ipairs(ctx.manager.getTargetablePlayers()) do
 			if not ctx.detention.hasImmunity(player)
 				and not ctx.detention.isDetained(player)
-				and not (silver and silver.isGrabbing(player)) then -- Silver's victim is Silver's
+				and not NpcRoster.any(ctx, "Silver", "isGrabbing", player) then -- Silver's (or her twin's) victim is Silver's
 				local hrp = targetRoot(player)
 				-- only detain a rule-breaker: the player LP flagged for running
 				-- (and is actively chasing), or anyone caught running right now.
@@ -213,7 +219,7 @@ function LpAI.init(ctx)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.LP = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

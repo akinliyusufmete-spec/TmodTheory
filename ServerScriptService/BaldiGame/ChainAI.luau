@@ -35,6 +35,7 @@ local RunService = game:GetService("RunService")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 
 local ChainAI = {}
 
@@ -42,17 +43,23 @@ local COLOR_BODY = Color3.fromRGB(95, 98, 108)
 local COLOR_HEAD = Color3.fromRGB(130, 133, 143)
 local LINK_COLOR = Color3.fromRGB(70, 72, 80)
 
-function ChainAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function ChainAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.CHAIN
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(185, 188, 198),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHAIN,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHAIN + (opts.spawnOffset or Vector3.zero),
 		(cfg.ROAM_SPEED + cfg.CHASE_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -141,10 +148,14 @@ function ChainAI.init(ctx)
 		return character and character:FindFirstChild("HumanoidRootPart") or nil
 	end
 
+	-- one Chain per victim: a player an EVIL twin (or the original) already
+	-- holds is off limits, so the ChainTug / ChainSnip handlers below (every
+	-- Chain connects its own, each acting only on ITS victim) never both
+	-- answer the same player
 	local function canShackle(player)
 		return (immunityUntil[player] or 0) <= os.clock()
 			and not ctx.detention.hasImmunity(player)
-			and not self.isShackling(player)
+			and not NpcRoster.any(ctx, "Chain", "isShackling", player)
 	end
 
 	-- ---------- shackle ----------
@@ -389,7 +400,7 @@ function ChainAI.init(ctx)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.Chain = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

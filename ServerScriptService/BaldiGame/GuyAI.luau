@@ -23,6 +23,7 @@ local Debris = game:GetService("Debris")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 local SoundLoader = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("SoundLoader"))
 local AssetResolver = require(script.Parent.AssetResolver)
 
@@ -31,17 +32,37 @@ local GuyAI = {}
 local COLOR_BODY = Color3.fromRGB(120, 60, 140)
 local COLOR_HEAD = Color3.fromRGB(160, 90, 180)
 
-function GuyAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function GuyAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.GUY
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(200, 130, 220),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.GUY)
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.GUY + (opts.spawnOffset or Vector3.zero))
+
+	-- held by any Silver (an EVIL twin's grip counts too)
+	local function silverHolds(player)
+		return NpcRoster.any(ctx, "Silver", "isGrabbing", player)
+	end
+
+	-- the hunter heard that: every ChatRevive in play (an EVIL twin too)
+	local function alertHunters(seconds)
+		for _, chatRevive in ipairs(NpcRoster.named(ctx, "ChatRevive")) do
+			if chatRevive.alertBurst and not chatRevive.base.parked then
+				chatRevive.alertBurst(seconds)
+			end
+		end
+	end
 	self.base = base
 	self.model = model
 
@@ -138,20 +159,16 @@ function GuyAI.init(ctx)
 			task.delay(cfg.STUN_ON_REVEAL, function()
 				local nowCharacter = player.Character
 				local nowHrp = nowCharacter and nowCharacter:FindFirstChild("HumanoidRootPart")
-				local silver = ctx.npcs.Silver
 				if nowHrp and ctx.manager.isParticipant(player)
 					and not ctx.detention.isDetained(player)
-					and not (silver and silver.isGrabbing and silver.isGrabbing(player)) then
+					and not silverHolds(player) then
 					nowHrp.Anchored = false
 				end
 			end)
 		end
 
 		-- the hunter heard that
-		local chatRevive = ctx.npcs.ChatRevive
-		if chatRevive and chatRevive.alertBurst and not chatRevive.base.parked then
-			chatRevive.alertBurst(cfg.PING_SECONDS)
-		end
+		alertHunters(cfg.PING_SECONDS)
 	end
 
 	-- pick a notebook spawn node in the ACTIVE map, away from players
@@ -293,8 +310,7 @@ function GuyAI.init(ctx)
 		if ctx.detention.isDetained(player) then
 			return false
 		end
-		local silver = ctx.npcs.Silver
-		if silver and silver.isGrabbing and silver.isGrabbing(player) then
+		if silverHolds(player) then
 			return false
 		end
 		self._failCooldown = self._failCooldown or setmetatable({}, { __mode = "k" })
@@ -325,22 +341,18 @@ function GuyAI.init(ctx)
 			task.delay(cfg.STUN_ON_REVEAL, function()
 				local nowCharacter = player.Character
 				local nowHrp = nowCharacter and nowCharacter:FindFirstChild("HumanoidRootPart")
-				local silverNow = ctx.npcs.Silver
 				if nowHrp and ctx.manager.isParticipant(player)
 					and not ctx.detention.isDetained(player)
-					and not (silverNow and silverNow.isGrabbing and silverNow.isGrabbing(player)) then
+					and not silverHolds(player) then
 					nowHrp.Anchored = false
 				end
 			end)
 		end
-		local chatRevive = ctx.npcs.ChatRevive
-		if chatRevive and chatRevive.alertBurst and not chatRevive.base.parked then
-			chatRevive.alertBurst(cfg.PING_SECONDS)
-		end
+		alertHunters(cfg.PING_SECONDS)
 		return true
 	end
 
-	ctx.npcs.Guy = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

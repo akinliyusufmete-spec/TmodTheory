@@ -28,6 +28,7 @@ local Players = game:GetService("Players")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 
 local BeansAI = {}
 
@@ -35,17 +36,23 @@ local COLOR_BODY = Color3.fromRGB(120, 75, 150)
 local COLOR_HEAD = Color3.fromRGB(160, 110, 185)
 local GUM_COLOR = Color3.fromRGB(150, 225, 160)
 
-function BeansAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function BeansAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.BEANS
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(210, 160, 225),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.BEANS, cfg.ROAM_SPEED)
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.BEANS + (opts.spawnOffset or Vector3.zero), cfg.ROAM_SPEED)
 	self.base = base
 	self.model = model
 
@@ -62,10 +69,18 @@ function BeansAI.init(ctx)
 		return character and character:FindFirstChild("HumanoidRootPart") or nil
 	end
 
+	function self.isGumming(player)
+		return (gummedUntil[player] or 0) > os.clock()
+	end
+
+	-- one Beans' gum at a time: a player an EVIL twin (or the original) has
+	-- gummed is off limits, so the BeansSnip handlers (every Beans connects
+	-- its own, each acting only on ITS gum) never both spend Scissors
 	local function canGum(player)
 		return (gumImmunityUntil[player] or 0) <= os.clock()
 			and (gummedUntil[player] or 0) <= os.clock()
 			and not ctx.detention.hasImmunity(player)
+			and not NpcRoster.any(ctx, "Beans", "isGumming", player)
 	end
 
 	-- ---------- gum effects ----------
@@ -343,7 +358,7 @@ function BeansAI.init(ctx)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.Beans = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 
