@@ -580,6 +580,15 @@ GameConfig.NPC = {
 		MEMORY_SECONDS = 6, -- chases last-known position this long after losing sight
 		CATCH_DISTANCE = 4,
 
+		-- ----- tight-space routing (ChatReviveAI.planDash) -----
+		-- When a wall blocks the straight dash he follows a computed route.
+		SMOOTH_PATH = true, -- dash to the FURTHEST route point his body can reach in a straight line
+		-- (cuts the zig-zag through doorways and small rooms; false = stop at every bend)
+		NARROW_AGENT_RADIUS = 1.75, -- slimmer route agent tried only when the normal one finds no
+		-- way through (narrow doors, desk rows). Keep it above his dash sphere radius (1.5).
+		PATH_REUSE_DISTANCE = 3, -- reuse the last route while the goal moved less than this...
+		PATH_REUSE_SECONDS = 1, -- ...and the route is younger than this (fewer ComputeAsync calls)
+
 		-- ----- Baldi movement -----
 		-- He never glides. Each slap his Dash animation (CharacterConfig) plays
 		-- once: he stands through the wind-up, and on its "DashAttack" event

@@ -9,7 +9,12 @@
 	  - If walls block the way, he computes a path and follows its waypoints
 	    only until the next corner (CORNER_THRESHOLD) or until DASH_DISTANCE,
 	    whichever comes first, so he moves in clean bursts down corridors and
-	    turns at corners instead of clipping through walls.
+	    turns at corners instead of clipping through walls. With SMOOTH_PATH
+	    he first tries the furthest route point he can reach in one straight,
+	    spherecast-clear dash, so doorways and small rooms take one dash
+	    instead of one per waypoint. Routes are reused for PATH_REUSE_SECONDS
+	    while the goal stays put, and a slimmer agent (NARROW_AGENT_RADIUS)
+	    is tried when the normal one can't fit through a gap.
 	  - A final spherecast shortens the dash if anything is still in the way.
 	  - Movement is a LinearVelocity (root.DashVelocity) that pushes only on
 	    the horizontal axes, so gravity still works. WalkSpeed stays 0 so he
@@ -40,6 +45,7 @@
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local PathfindingService = game:GetService("PathfindingService")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
@@ -76,6 +82,12 @@ function ChatReviveAI.init(ctx)
 	local MIN_DASH = cfg.MIN_DASH or 1.5
 	local ROAM_DASH_SPEED = cfg.ROAM_DASH_SPEED or 30
 	local DASH_SPEED = cfg.DASH_SPEED or 45
+	-- tight-space routing (see getRoute / furthestVisible below)
+	local SMOOTH_PATH = cfg.SMOOTH_PATH ~= false
+	local NARROW_AGENT_RADIUS = cfg.NARROW_AGENT_RADIUS or math.max(SPHERE_RADIUS + 0.25, 1)
+	local PATH_REUSE_DISTANCE = cfg.PATH_REUSE_DISTANCE or 3
+	local PATH_REUSE_SECONDS = cfg.PATH_REUSE_SECONDS or 1
+	local PATH_LEAVE_DISTANCE = 4 -- further than this from a cached route = re-route
 
 	local model = NpcFactory.create({
 		name = cfg.NAME,
@@ -88,6 +100,15 @@ function ChatReviveAI.init(ctx)
 	self.base = base
 	self.model = model
 	local humanoid = base.humanoid
+
+	-- a slimmer second agent for gaps the normal one can't fit through
+	-- (narrow doorways, desk rows): only tried when the normal route fails
+	local narrowPath = nil
+	if NARROW_AGENT_RADIUS < base.agentParams.AgentRadius then
+		local narrowParams = table.clone(base.agentParams)
+		narrowParams.AgentRadius = NARROW_AGENT_RADIUS
+		narrowPath = PathfindingService:CreatePath(narrowParams)
+	end
 	humanoid.AutoRotate = false -- the facing loop below turns him
 	base:stop() -- WalkSpeed 0: he only ever moves by dashing
 
@@ -400,6 +421,115 @@ function ChatReviveAI.init(ctx)
 		return workspace:Raycast(point, Vector3.new(0, -8, 0), castParams) ~= nil
 	end
 
+	-- ---------- routes ----------
+
+	-- the last computed route, reused while the goal barely moves so a short
+	-- hop across a small room doesn't pay for a fresh ComputeAsync every dash
+	local route = nil -- { goal = Vector3, waypoints = { PathWaypoint }, at = os.clock() }
+
+	local function computeWaypoints(goal)
+		local waypoints = base:computePath(goal)
+		if (not waypoints or #waypoints < 2) and narrowPath then
+			local ok = pcall(function()
+				narrowPath:ComputeAsync(base.root.Position, goal)
+			end)
+			if ok and narrowPath.Status == Enum.PathStatus.Success then
+				waypoints = narrowPath:GetWaypoints()
+			end
+		end
+		return waypoints
+	end
+
+	-- waypoints from (about) origin to goal: the cached route trimmed to where
+	-- he stands now, or a fresh one
+	local function getRoute(origin, goal)
+		local now = os.clock()
+		if route and now - route.at < PATH_REUSE_SECONDS
+			and flatDistance(route.goal, goal) < PATH_REUSE_DISTANCE
+			and math.abs(route.goal.Y - goal.Y) < 4 then
+			local waypoints = route.waypoints
+			local nearest, nearestDistance = nil, math.huge
+			for index, wp in ipairs(waypoints) do
+				local distance = flatDistance(wp.Position, origin)
+				if distance < nearestDistance then
+					nearest, nearestDistance = index, distance
+				end
+			end
+			if nearest and nearestDistance < PATH_LEAVE_DISTANCE then
+				-- keep the nearest waypoint only if it is still ahead of him
+				local first = nearest + 1
+				local nextWp = waypoints[nearest + 1]
+				if nextWp then
+					local ahead = flat(waypoints[nearest].Position - origin)
+					local along = flat(nextWp.Position - waypoints[nearest].Position)
+					if ahead.Magnitude > 0.5 and ahead:Dot(along) > 0 then
+						first = nearest
+					end
+				end
+				local trimmed = { { Position = origin, Action = Enum.PathWaypointAction.Walk } }
+				for index = first, #waypoints do
+					table.insert(trimmed, waypoints[index])
+				end
+				if #trimmed >= 2 then
+					return trimmed
+				end
+			end
+		end
+		local waypoints = computeWaypoints(goal)
+		if waypoints and #waypoints >= 2 then
+			route = { goal = goal, waypoints = waypoints, at = now }
+		else
+			route = nil
+		end
+		return waypoints
+	end
+
+	-- String-pulling: the furthest point along the route (within DASH_DISTANCE
+	-- of walking) that he can dash STRAIGHT to with his whole body clear and
+	-- floor underneath. In a small room or a doorway this cuts the zig-zag
+	-- of 4-stud waypoints into one dash instead of stopping at every bend; a
+	-- real corner still blocks the spherecast, so he never clips a wall.
+	-- Returns the dash end (at origin height) and whether to jump, or nil.
+	local function furthestVisible(origin, waypoints)
+		local candidates = {} -- { pos, travelled, jump }
+		local prev = origin
+		local travelled = 0
+		for i = 2, #waypoints do
+			local wp = waypoints[i]
+			local p = Vector3.new(wp.Position.X, origin.Y, wp.Position.Z)
+			local seg = flat(p - prev)
+			local segLength = seg.Magnitude
+			local jump = wp.Action == JUMP_ACTION
+			if segLength > 0.05 then
+				local remaining = DASH_DISTANCE - travelled
+				if segLength >= remaining then
+					table.insert(candidates, { pos = prev + seg.Unit * remaining, travelled = DASH_DISTANCE, jump = false })
+					break
+				end
+				travelled += segLength
+				prev = p
+				table.insert(candidates, { pos = p, travelled = travelled, jump = jump })
+			end
+			if jump then
+				break -- never plan past a jump: it's taken on its own dash
+			end
+		end
+		for i = #candidates, 1, -1 do
+			local candidate = candidates[i]
+			local delta = flat(candidate.pos - origin)
+			local length = delta.Magnitude
+			if length >= MIN_DASH and length <= DASH_DISTANCE + 0.05 then
+				local dir = delta.Unit
+				if clearDistance(origin, dir, length) >= length - 0.05
+					and hasFloor(origin + dir * (length * 0.5))
+					and hasFloor(candidate.pos) then
+					return candidate.pos, candidate.jump and candidate.travelled < 4
+				end
+			end
+		end
+		return nil, false
+	end
+
 	-- follow path waypoints until the next corner or DASH_DISTANCE
 	-- returns the dash end (at origin height) and whether to jump
 	local function cornerEnd(origin, waypoints)
@@ -459,9 +589,14 @@ function ChatReviveAI.init(ctx)
 			and hasFloor(origin + dir * length) then
 			endPos = origin + dir * length -- clear line: straight at it
 		else
-			local waypoints = base:computePath(goal)
+			local waypoints = getRoute(origin, goal)
 			if waypoints and #waypoints >= 2 then
-				endPos, jump = cornerEnd(origin, waypoints)
+				if SMOOTH_PATH then
+					endPos, jump = furthestVisible(origin, waypoints)
+				end
+				if not endPos then
+					endPos, jump = cornerEnd(origin, waypoints)
+				end
 			end
 			if not endPos then
 				endPos = origin + dir * length -- no path: straight at it anyway
@@ -652,6 +787,7 @@ function ChatReviveAI.init(ctx)
 						if brain.fails >= 2 then
 							dir, length = escapeDash(goal)
 							brain.fails = 0
+							route = nil
 						end
 					end
 					if dir and length >= MIN_DASH then
@@ -660,6 +796,9 @@ function ChatReviveAI.init(ctx)
 							brain.fails = 0
 						elseif result == "stalled" or result == "timeout" then
 							brain.fails += 1
+						end
+						if result ~= "done" then
+							route = nil -- knocked off course: the cached route no longer fits
 						end
 						if result ~= "stunned" and result ~= "abort" then
 							local cooldown = lerpHeat(cfg.DASH_COOLDOWN or 0.4, cfg.DASH_COOLDOWN_FAST or 0.15)
@@ -778,6 +917,7 @@ function ChatReviveAI.init(ctx)
 		brain.faceDir = nil
 		brain.fails = 0
 		brain.caughtAt = {}
+		route = nil
 		goIdle()
 		setState("Wander")
 		model:SetAttribute("Telegraph", false)
