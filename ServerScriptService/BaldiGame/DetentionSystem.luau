@@ -21,9 +21,12 @@ function DetentionSystem.init(ctx)
 		detained[player] = nil
 		immunityUntil[player] = os.clock() + ctx.config.NPC.LP.RELEASE_IMMUNITY_SECONDS
 
+		-- only unanchor a player who is still in the round: someone caught,
+		-- escaped, forfeited or respawned since is anchored by GameManager
+		-- (the main-screen float) and must stay that way
 		local character = player.Character
 		local hrp = character and character:FindFirstChild("HumanoidRootPart")
-		if hrp then
+		if hrp and ctx.manager and ctx.manager.isParticipant(player) then
 			hrp.Anchored = false
 		end
 		if player.Parent then

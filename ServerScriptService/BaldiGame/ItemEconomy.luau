@@ -340,6 +340,9 @@ function ItemEconomy.init(ctx)
 	end
 
 	function self.onRoundStart()
+		if self.wireVending then
+			self.wireVending(ctx.map) -- the active map may be a freshly swapped-in one
+		end
 		self.clearPickups()
 		-- shuffle a copy so each round's starter coins land in different spots
 		local spots = {}
@@ -631,15 +634,26 @@ function ItemEconomy.init(ctx)
 		ctx.remotes.BuyResult:FireClient(player, true, def.displayName .. " bought!")
 	end
 
-	for _, machine in ipairs(ctx.map.vendingMachines) do
-		machine.prompt.Triggered:Connect(function(player)
-			if not ctx.manager or not ctx.manager.isRoundActive()
-				or not ctx.manager.isParticipant(player) then
-				return
+	-- Wire a map's machines once each. The classic map is wired now; maps a
+	-- mode swaps in (the multiplayer match map) are wired as their round
+	-- starts (onRoundStart), so their machines work too.
+	local wiredPrompts = {} -- [ProximityPrompt] = true
+	local function wireVending(map)
+		for _, machine in ipairs((map and map.vendingMachines) or {}) do
+			if not wiredPrompts[machine.prompt] then
+				wiredPrompts[machine.prompt] = true
+				machine.prompt.Triggered:Connect(function(player)
+					if not ctx.manager or not ctx.manager.isRoundActive()
+						or not ctx.manager.isParticipant(player) then
+						return
+					end
+					tryBuy(player, machine)
+				end)
 			end
-			tryBuy(player, machine)
-		end)
+		end
 	end
+	wireVending(ctx.map)
+	self.wireVending = wireVending
 
 	ctx.economy = self
 	return self

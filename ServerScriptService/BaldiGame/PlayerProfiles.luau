@@ -14,6 +14,14 @@
 	A profile that failed to load is never saved, so stored data is never
 	overwritten with a blank one.
 
+	Session lock: a profile is read and written with UpdateAsync and carries
+	_lock = { id = this server, time }. Another server that finds a fresh
+	lock waits (up to LOCK_WAIT_SECONDS) for the owner to save and let go,
+	so hopping Hub <-> match can't load stale data and save it over newer
+	data. The autosave loop refreshes the lock; a lock older than
+	LOCK_STALE_SECONDS belongs to a crashed server and is taken over. A
+	server that finds its lock taken stops saving that profile.
+
 	Leaderboard: an OrderedDataStore of best times (milliseconds), fetched
 	at most once a minute and cached.
 ]]
@@ -21,6 +29,7 @@
 local Players = game:GetService("Players")
 local DataStoreService = game:GetService("DataStoreService")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Cosmetics = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("Cosmetics"))
@@ -41,6 +50,12 @@ function PlayerProfiles.init(ctx)
 	local dirty = {} -- [player] = true: unsaved changes (flushed by the autosave loop)
 	local bestDirty = {} -- [player] = true: best time improved since the last leaderboard write
 	local AUTOSAVE_INTERVAL = 20 -- seconds; well clear of the 6s per-key write cooldown
+	local LOCK_STALE_SECONDS = 150 -- a lock not refreshed for this long is a crashed server's
+	local LOCK_REFRESH_SECONDS = 60 -- autosave re-stamps the lock at least this often
+	local LOCK_WAIT_SECONDS = 30 -- how long a join waits for another server to let go
+	local SESSION_ID = (game.JobId ~= "" and game.JobId) or ("studio-" .. HttpService:GenerateGUID(false))
+	local lockedAt = {} -- [player] = os.clock() of our last successful write (lock refresh)
+	local released = {} -- [userId] = true: lock handed back; a late save must not re-take it
 	local profileStore, timeStore
 	pcall(function()
 		profileStore = DataStoreService:GetDataStore("TmodProfiles_v1")
@@ -66,24 +81,81 @@ function PlayerProfiles.init(ctx)
 
 	-- ---------- load / save ----------
 
+	local function profileKey(userId)
+		return "p" .. userId
+	end
+
+	local function lockedByOther(stored)
+		if type(stored) ~= "table" or type(stored._lock) ~= "table" then
+			return false
+		end
+		local lock = stored._lock
+		if RunService:IsStudio() and type(lock.id) == "string" and lock.id:sub(1, 7) == "studio-" then
+			return false -- a stopped Studio playtest never gets to let go: don't wait on it
+		end
+		return lock.id ~= SESSION_ID
+			and os.time() - (tonumber(lock.time) or 0) < LOCK_STALE_SECONDS
+	end
+
+	-- Read the stored profile AND take its session lock in one UpdateAsync.
+	-- Returns ok, stored. ok = false: couldn't read it, or another server
+	-- still holds it after LOCK_WAIT_SECONDS.
 	local function fetchStored(player)
-		-- retry briefly: one failed GetAsync must not cost a player their data
-		for attempt = 1, 3 do
-			local ok, stored = pcall(function()
-				return profileStore:GetAsync("p" .. player.UserId)
+		local key = profileKey(player.UserId)
+		local deadline = os.clock() + LOCK_WAIT_SECONDS
+		local errors = 0
+		while player.Parent do
+			local busy = false
+			local ok, result = pcall(function()
+				return profileStore:UpdateAsync(key, function(stored)
+					busy = lockedByOther(stored)
+					if busy then
+						return nil -- leave it untouched; try again shortly
+					end
+					stored = type(stored) == "table" and stored or {}
+					stored._lock = { id = SESSION_ID, time = os.time() }
+					return stored
+				end)
 			end)
+			if ok and not busy then
+				released[player.UserId] = nil
+				return true, result
+			end
 			if ok then
-				return true, stored
-			end
-			-- Studio without API access fails the same way every time: don't stall
-			if tostring(stored):find("403") or tostring(stored):lower():find("not allowed") then
-				break
-			end
-			if attempt < 3 then
-				task.wait(attempt * 2)
+				-- another server still owns the profile (it is saving the
+				-- player out right now, usually): give it time
+				if os.clock() > deadline then
+					warn(string.format("[Tmod] %s's profile is still locked by another server.", player.Name))
+					return false, nil
+				end
+				task.wait(3)
+			else
+				-- Studio without API access fails the same way every time: don't stall
+				local message = tostring(result)
+				if message:find("403") or message:lower():find("not allowed") then
+					return false, nil
+				end
+				errors += 1
+				if errors >= 3 then
+					return false, nil
+				end
+				task.wait(errors * 2) -- one failed call must not cost a player their data
 			end
 		end
 		return false, nil
+	end
+
+	-- Give a lock back without writing a profile (the player left mid-load).
+	local function releaseLockOnly(userId)
+		pcall(function()
+			profileStore:UpdateAsync(profileKey(userId), function(stored)
+				if type(stored) ~= "table" or type(stored._lock) ~= "table" or stored._lock.id ~= SESSION_ID then
+					return nil
+				end
+				stored._lock = nil
+				return stored
+			end)
+		end)
 	end
 
 	local function load(player)
@@ -141,27 +213,54 @@ function PlayerProfiles.init(ctx)
 		return profile
 	end
 
-	local function save(player)
+	-- Write the profile. releaseLock = this server is done with it (leaving
+	-- or shutting down): the lock is dropped so the next server loads at once.
+	local function save(player, releaseLock)
 		local profile = profiles[player]
 		if not profile or not profileStore or loadFailed[player] then
 			return
 		end
+		local userId = player.UserId
 		dirty[player] = nil
+		local record = {
+			wins = profile.wins,
+			curriculums = profile.curriculums,
+			bestTime = profile.bestTime,
+			bestGrade = profile.bestGrade,
+			recent = profile.recent,
+			binds = profile.binds,
+			hudLayout = profile.hudLayout,
+			settings = profile.settings,
+			ownedCosmetics = profile.ownedCosmetics,
+			equippedCosmetics = profile.equippedCosmetics,
+		}
+		local stolen = false
 		local ok, err = pcall(function()
-			profileStore:SetAsync("p" .. player.UserId, {
-				wins = profile.wins,
-				curriculums = profile.curriculums,
-				bestTime = profile.bestTime,
-				bestGrade = profile.bestGrade,
-				recent = profile.recent,
-				binds = profile.binds,
-				hudLayout = profile.hudLayout,
-				settings = profile.settings,
-				ownedCosmetics = profile.ownedCosmetics,
-				equippedCosmetics = profile.equippedCosmetics,
-			})
+			profileStore:UpdateAsync(profileKey(userId), function(stored)
+				stolen = type(stored) == "table" and type(stored._lock) == "table"
+					and stored._lock.id ~= SESSION_ID
+				if stolen then
+					return nil -- another server owns this profile now: never overwrite it
+				end
+				local keepLock = not (releaseLock or released[userId])
+				record._lock = keepLock and { id = SESSION_ID, time = os.time() } or nil
+				return record
+			end)
 		end)
-		if not ok then
+		if ok and stolen then
+			loadFailed[player] = true -- stop saving: the other server's copy wins
+			warn("[Tmod] " .. player.Name .. "'s profile was taken over by another server; no longer saving it here.")
+		elseif ok then
+			lockedAt[player] = os.clock()
+			if releaseLock then
+				released[userId] = true
+				task.delay(LOCK_STALE_SECONDS, function()
+					if not Players:GetPlayerByUserId(userId) then
+						released[userId] = nil
+					end
+				end)
+			end
+		else
 			dirty[player] = true -- retry on the next autosave pass
 			warn("[Tmod] Profile save failed for " .. player.Name .. ": " .. tostring(err))
 		end
@@ -170,7 +269,7 @@ function PlayerProfiles.init(ctx)
 			bestDirty[player] = nil
 			local okBest = pcall(function()
 				-- ascending leaderboard: store milliseconds
-				timeStore:SetAsync(tostring(player.UserId), math.floor(profile.bestTime * 1000))
+				timeStore:SetAsync(tostring(userId), math.floor(profile.bestTime * 1000))
 			end)
 			if not okBest then
 				bestDirty[player] = true
@@ -203,6 +302,15 @@ function PlayerProfiles.init(ctx)
 		loading[player] = nil
 		if player.Parent then
 			profiles[player] = profile
+			lockedAt[player] = os.clock()
+		else
+			-- left while loading: PlayerRemoving already ran, so drop what the
+			-- load recorded and hand back the lock it may have taken
+			local failed = loadFailed[player]
+			loadFailed[player] = nil
+			if profileStore and not failed then
+				task.spawn(releaseLockOnly, player.UserId)
+			end
 		end
 		return profile
 	end
@@ -514,25 +622,26 @@ function PlayerProfiles.init(ctx)
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
-		if dirty[player] or bestDirty[player] then
-			save(player)
-		end
+		-- always write on leave (even with nothing new) to release the lock
+		save(player, true)
 		profiles[player] = nil
 		dirty[player] = nil
 		bestDirty[player] = nil
 		loadFailed[player] = nil
+		lockedAt[player] = nil
 		statsDebounce[player] = nil
 	end)
 
-	-- autosave: flush whoever has unsaved changes
+	-- autosave: flush unsaved changes, and re-stamp every held lock before it
+	-- could look stale to another server
 	task.spawn(function()
 		while true do
 			task.wait(AUTOSAVE_INTERVAL)
-			for player in pairs(dirty) do
-				if player.Parent then
+			local now = os.clock()
+			for player in pairs(profiles) do
+				if player.Parent and (dirty[player] or bestDirty[player]
+					or now - (lockedAt[player] or 0) > LOCK_REFRESH_SECONDS) then
 					task.spawn(save, player)
-				else
-					dirty[player] = nil
 				end
 			end
 		end
@@ -543,10 +652,10 @@ function PlayerProfiles.init(ctx)
 			-- save everyone in parallel, then wait (BindToClose allows ~30s)
 			local pending = 0
 			for _, player in ipairs(Players:GetPlayers()) do
-				if dirty[player] or bestDirty[player] then
+				if profiles[player] then
 					pending += 1
 					task.spawn(function()
-						save(player)
+						save(player, true) -- also lets go of the lock
 						pending -= 1
 					end)
 				end

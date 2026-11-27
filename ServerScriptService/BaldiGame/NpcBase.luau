@@ -69,6 +69,7 @@ function NpcBase.new(ctx, model, spawnCFrame, chaseAnimThreshold)
 	self.desiredSpeed = 0
 	self.rng = Random.new()
 	self.chaseTarget = nil -- set by beginChase while hunting someone
+	self.pushGeneration = 0 -- bumped on reset/park: running BSODA shoves stop
 
 	-- the client animator (NpcAnimatorClient) switches Walk -> Chase above this
 	if chaseAnimThreshold then
@@ -193,6 +194,7 @@ function NpcBase:setPaused(paused)
 end
 
 function NpcBase:resetToSpawn()
+	self.pushGeneration += 1 -- end any shove still running from last round
 	self:endAction()
 	self.stunnedUntil = 0
 	self.slowUntil = 0
@@ -213,6 +215,7 @@ end
 -- Used for characters that sit out the current game mode (e.g. Chain and
 -- Beans outside Multiplayer). resetToSpawn / unpark bring it back.
 function NpcBase:park()
+	self.pushGeneration += 1
 	self:endAction()
 	self:setPaused(true)
 	self.parked = true
@@ -369,10 +372,11 @@ function NpcBase:stun(duration, pushDirection)
 		local flat = Vector3.new(pushDirection.X, 0, pushDirection.Z)
 		if flat.Magnitude > 0.01 then
 			local pushVelocity = flat.Unit * (cfg.PUSH_STUDS / cfg.PUSH_DURATION)
+			local generation = self.pushGeneration
 			task.spawn(function()
 				local started = os.clock()
 				while os.clock() - started < cfg.PUSH_DURATION do
-					if not self.root.Parent then
+					if not self.root.Parent or self.pushGeneration ~= generation then
 						return
 					end
 					self.root.AssemblyLinearVelocity = Vector3.new(pushVelocity.X, self.root.AssemblyLinearVelocity.Y, pushVelocity.Z)
@@ -421,9 +425,13 @@ function NpcBase:pushBy(direction, speed, maxDuration, stopParams)
 	end
 
 	local started = os.clock()
+	local generation = self.pushGeneration
 	while os.clock() - started < maxDuration do
 		if not self.root.Parent then
 			return
+		end
+		if self.pushGeneration ~= generation then
+			return -- reset or parked mid-shove (round over): leave him where reset put him
 		end
 		-- pinned against a wall? the spray dissipates and lets them go
 		if stopParams and workspace:Raycast(self.root.Position, dir * 3.5, stopParams) then
