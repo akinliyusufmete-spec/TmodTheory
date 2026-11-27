@@ -210,8 +210,8 @@ function NpcBase:resetToSpawn()
 end
 
 -- Park: freeze the NPC far above its spawn, out of sight and out of play.
--- Used for characters that sit out the current game mode (e.g. ChatRevive
--- during Impersonator). resetToSpawn / unpark bring it back.
+-- Used for characters that sit out the current game mode (e.g. Chain and
+-- Beans outside Multiplayer). resetToSpawn / unpark bring it back.
 function NpcBase:park()
 	self:endAction()
 	self:setPaused(true)

@@ -54,7 +54,7 @@ function ItemUseClient.init(ctx)
 		end
 		local sequence = ctx.controllers.SequenceMinigame
 		if sequence and sequence.active then
-			return -- this press is a symbol in Sportage's lock
+			return -- this press is a symbol in the sequence lock
 		end
 		if not self.slots[1] then
 			return
@@ -84,7 +84,7 @@ function ItemUseClient.init(ctx)
 		end
 		local sequence = ctx.controllers.SequenceMinigame
 		if sequence and sequence.active then
-			return -- this press is a symbol in Sportage's lock
+			return -- this press is a symbol in the sequence lock
 		end
 		if not self.slots[1] and not self.slots[2] then
 			return

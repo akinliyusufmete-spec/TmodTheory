@@ -63,7 +63,7 @@
 
 	  Sounds            SoundLoader ids for this character's sounds. Blank = AssetConfig's
 	                    id, then the built-in default. Names used: ChatRevive.Chase,
-	                    LP.Whistle, Guy.Scream, Sportage.Trap, the sweepers' Sweep.
+	                    LP.Whistle, Guy.Scream, the sweepers' Sweep.
 
 	  Pathfinding       SimplePath agent overrides for this character: AgentRadius,
 	                    AgentHeight, AgentCanJump, AgentJumpHeight, WaypointSpacing,
@@ -223,24 +223,6 @@ CharacterConfig.Characters = {
 		TextOutlineColor = Color3.fromRGB(255, 255, 255),
 		TextEffect = { interval = 0.02, anim = false, decode = { true, dur = 0.3 } },
 		Sounds = { Scream = "" }, -- blank = AssetConfig.SOUNDS.guy
-	},
-
-	-- extra moment: Trap (someone steps on one of Sportage's traps)
-	Sportage = {
-		Voicelines = {
-			Spotted = { "I knew it!" },
-			Chasing = { "Heads up!" },
-			Lost = { "Out of bounds..." },
-			Caught = { "Game over!" },
-			Trap = { "Snap! I heard that." },
-			Stunned = { "Foul!" },
-			Idle = { "Listening..." },
-		},
-		TextColor = Color3.fromRGB(255, 175, 60),
-		TextAltColor = Color3.fromRGB(255, 235, 150),
-		TextOutlineColor = Color3.fromRGB(70, 30, 0),
-		TextEffect = { interval = 0.035, anim = { "slide", dir = "down", offset = 0.6, rot = 0, dur = 0.25 } },
-		Sounds = { Trap = "" },
 	},
 
 	-- the sweepers. Extra moment: Sweep (starts a sweep run)

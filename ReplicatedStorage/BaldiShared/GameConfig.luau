@@ -31,7 +31,6 @@ GameConfig.DEBUG = {
 		Guy = true,
 		Chain = true,
 		Beans = true,
-		Sportage = true,
 	},
 }
 
@@ -66,7 +65,7 @@ GameConfig.NOTEBOOK_MINIGAME = {
 -- Each notebook spawned in a round is randomly assigned one of these types.
 -- The type determines the cover color and which minigame it opens. weight
 -- controls how often each type appears relative to the others.
--- If a game mode sets MINIGAME (e.g. Impersonator), that overrides the type.
+-- If a game mode sets MINIGAME, that overrides the type.
 GameConfig.NOTEBOOK_TYPES = {
 	{ id = "red",    color = Color3.fromRGB(200, 40,  40),  minigame = "timing",   weight = 3 },
 	{ id = "blue",   color = Color3.fromRGB(50,  110, 220), minigame = "math",     weight = 3 },
@@ -400,16 +399,6 @@ GameConfig.MODES = {
 			EXTRA_OPENINGS = 0.12, -- fraction of walls knocked out for loops
 		},
 	},
-	IMPERSONATOR = {
-		id = "IMPERSONATOR",
-		displayName = "Impersonator",
-		CLOSED = true, -- not fully developed yet: hidden/disabled in the menu and refused by the server
-		LOCKED_UNTIL_WIN = true,
-		SINGLE_PLAYER = true, -- nobody can join your round
-		HUNTER = "Sportage",
-		NPCS = { Sportage = true }, -- the ONLY threat
-		MINIGAME = "sequence", -- Sportage swapped the notebook locks
-	},
 	-- The big multiplayer match (launched from the Hub place). Runs on a
 	-- reserved server with your hand-built MATCH.MAP_NAME map; the whole party
 	-- arrives and plays together. Not startable from the normal menu — only the
@@ -532,9 +521,9 @@ GameConfig.NPC_GUIDE = {
 	},
 }
 
--- The memory-sequence minigame (Impersonator's notebooks): watch a short
--- pattern of your Use/Swap keys flash, then repeat it. A wrong press is a
--- LOUD mistake — Sportage hears it and comes to investigate.
+-- The memory-sequence minigame (purple notebooks): watch a short pattern of
+-- your Use/Swap keys flash, then repeat it. A wrong press is a LOUD mistake
+-- that Guy reacts to.
 GameConfig.SEQUENCE_MINIGAME = {
 	LENGTH = 5, -- symbols per pattern
 	SHOW_SECONDS = 0.55, -- how long each symbol flashes during the preview
@@ -745,27 +734,6 @@ GameConfig.NPC = {
 			WAIT_MAX = 3,
 			SWEEPS_NPCS = true,
 		},
-	},
-	-- Impersonator mode's hunter. Not omniscient — he relies on his EARS
-	-- and his TRAPS: stepping on a trap roots you and tells him exactly
-	-- where you are; failing his sequence lock does the same.
-	SPORTAGE = {
-		NAME = "Sportage",
-		ROAM_SPEED = 14,
-		CHASE_SPEED = 26, -- a sprint barely outruns him
-		ENRAGED_CHASE_SPEED = 33, -- after the last notebook
-		SIGHT_RANGE = 60,
-		SIGHT_INTERVAL = 0.25,
-		MEMORY_SECONDS = 5,
-		CATCH_DISTANCE = 4,
-		TRAPS_AT_START = 6, -- traps scattered at round start
-		MAX_TRAPS = 8,
-		TRAP_RADIUS = 3.2, -- stepping this close springs it
-		TRAP_HOLD_SECONDS = 2.5, -- how long a sprung trap roots you
-		TRAP_IMMUNITY = 6, -- can't be re-trapped right after one
-		TRAP_RESTOCK = 18, -- he lays a fresh trap this often while patrolling
-		TRAP_VISIBILITY = 0.45, -- 0 = invisible, 1 = obvious (transparency is 1 - this)
-		HEARING_BURST = 7, -- seconds of "he knows where you are" after a noise
 	},
 	-- Guy, the mimic: poses as a notebook. Starting to "collect" him is a
 	-- jumpscare — a loud SCREEE that pings the hunter straight to you —

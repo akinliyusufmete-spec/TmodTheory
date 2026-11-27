@@ -312,7 +312,6 @@ function MapResolver.resolveRoot(ctx, root)
 			LP = markerCFrame(markers, "LpSpawn", 2, CFrame.new(-75, 3, 0), borrowWaypoint),
 			FROSTY = markerCFrame(markers, "FrostySpawn", 2, CFrame.new(0, 3, 42), borrowWaypoint),
 			SILVER = markerCFrame(markers, "SilverSpawn", 2, CFrame.new(30, 3, -60), borrowWaypoint),
-			SPORTAGE = markerCFrame(markers, "SportageSpawn", 2, CFrame.new(90, 3, 0), borrowWaypoint),
 			GUY = markerCFrame(markers, "GuySpawn", 2, CFrame.new(-30, 3, 30), borrowWaypoint),
 			CHAIN = markerCFrame(markers, "ChainSpawn", 2, CFrame.new(60, 3, 30), borrowWaypoint),
 			BEANS = markerCFrame(markers, "BeansSpawn", 2, CFrame.new(-60, 3, -30), borrowWaypoint),

@@ -199,14 +199,12 @@ function GameManager.init(ctx)
 			return false
 		end
 		if hrp.Anchored then -- countdown or detention...
-			-- ...but a player in Silver's grasp — or rooted in one of
-			-- Sportage's traps or Frosty's BEARTrapper — stays fair game:
-			-- getting held in the open with a hunter nearby SHOULD be lethal
+			-- ...but a player in Silver's grasp — or rooted in Frosty's
+			-- BEARTrapper — stays fair game: getting held in the open with a
+			-- hunter nearby SHOULD be lethal
 			local silver = ctx.npcs.Silver
-			local sportage = ctx.npcs.Sportage
 			local frosty = ctx.npcs.Frosty
 			local held = (silver and silver.isGrabbing and silver.isGrabbing(player))
-				or (sportage and sportage.isTrapped and sportage.isTrapped(player))
 				or (frosty and frosty.isTrapped and frosty.isTrapped(player))
 			if not held then
 				return false
@@ -732,7 +730,7 @@ function GameManager.init(ctx)
 			end
 			beginCountdown(player, modeId)
 		elseif self.getModeConfig().SINGLE_PLAYER then
-			-- someone's Impersonator run is in progress: can't pile in
+			-- someone's single-player run is in progress: can't pile in
 			remotes.RoundAnnounce:FireClient(player,
 				"A single-player round is in progress — hang tight!")
 		elseif phase == "COUNTDOWN" then
@@ -746,7 +744,7 @@ function GameManager.init(ctx)
 		end
 	end)
 
-	-- characters that aren't in the Classic roster (Sportage) wait
+	-- characters that aren't in the Classic roster (Chain, Beans) wait
 	-- off-stage until a mode that uses them begins
 	applyNpcSet(config.MODES.CLASSIC)
 

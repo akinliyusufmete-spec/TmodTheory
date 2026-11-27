@@ -157,7 +157,7 @@ function NotebookSpawner.init(ctx)
 	local function startSession(player, notebook)
 		local position = notebook:GetPivot().Position
 
-		-- mode MINIGAME overrides notebook type (Impersonator forces "sequence")
+		-- a mode's MINIGAME (if set) overrides the notebook type
 		local modeCfg = ctx.manager.getModeConfig and ctx.manager.getModeConfig() or nil
 		local modeOverride = modeCfg and modeCfg.MINIGAME
 		local kind = modeOverride
@@ -318,10 +318,6 @@ function NotebookSpawner.init(ctx)
 			end
 			if ctx.npcs.Guy and ctx.npcs.Guy.onNotebookFail then
 				ctx.npcs.Guy.onNotebookFail(player)
-			end
-			local sportage = ctx.npcs.Sportage
-			if sportage and sportage.hear and not sportage.base.parked then
-				sportage.hear(hrp.Position)
 			end
 		elseif action == "done" and session.kind == "sequence" then
 			if os.clock() - session.startedAt < (session.minSeconds or 0) * 0.6 then

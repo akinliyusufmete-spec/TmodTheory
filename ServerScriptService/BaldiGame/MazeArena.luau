@@ -276,7 +276,6 @@ function MazeArena.init(ctx)
 			FROSTY = CFrame.new(cellCenter(mid, mid) + Vector3.new(0, 3, 0)),
 			SILVER = CFrame.new(cellCenter(mid, n) + Vector3.new(0, 3, 0)),
 			GUY = CFrame.new(cellCenter(n, mid) + Vector3.new(0, 3, 0)),
-			SPORTAGE = CFrame.new(cellCenter(n, 1) + Vector3.new(0, 3, 0)),
 		}
 
 		local spawnCenter = cellCenter(1, 1)
