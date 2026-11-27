@@ -175,8 +175,15 @@ function ChatReviveAI.init(ctx)
 		return (ctx.manager and ctx.manager.getHeat and ctx.manager.getHeat()) or 0
 	end
 
+	-- Heat can pass 1 (Summer Classes keeps notebooks coming), so this
+	-- extrapolates past `hot` — but never below half of a falling value (wind-up,
+	-- cooldown, scan interval stay positive) nor above double a rising one.
 	local function lerpHeat(calm, hot)
-		return calm + (hot - calm) * heat()
+		local value = calm + (hot - calm) * heat()
+		if hot < calm then
+			return math.max(value, hot * 0.5)
+		end
+		return math.min(value, hot * 2)
 	end
 
 	local function sightRange()
@@ -197,12 +204,12 @@ function ChatReviveAI.init(ctx)
 		if os.clock() < alertUntil then
 			return cfg.ENRAGED_SIGHT_INTERVAL
 		end
-		return cfg.SIGHT_INTERVAL + (cfg.ENRAGED_SIGHT_INTERVAL - cfg.SIGHT_INTERVAL) * heat()
+		return lerpHeat(cfg.SIGHT_INTERVAL, cfg.ENRAGED_SIGHT_INTERVAL)
 	end
 
 	local function playSlap()
 		pcall(function()
-			self.slapSound.PlaybackSpeed = self.enraged and 1.3 or (0.85 + heat() * 0.45)
+			self.slapSound.PlaybackSpeed = self.enraged and 1.3 or (0.85 + math.min(heat(), 1) * 0.45)
 			self.slapSound:Play()
 		end)
 	end
@@ -655,6 +662,12 @@ function ChatReviveAI.init(ctx)
 		end
 		if os.clock() < (base.slowUntil or 0) then
 			speed *= base.slowMultiplier or 1 -- Frosty's slow
+		end
+		-- he dashes on a LinearVelocity, not WalkSpeed, so NpcBase:applySpeed's
+		-- modifier multiplier never reaches him: apply it here (Frenzy, Toji,
+		-- Tortoise, Grand Bully's ChatRevive boost)
+		if ctx.modifiers and not base.ignoreModifiers then
+			speed *= ctx.modifiers.npcSpeedMult(model.Name)
 		end
 		return speed
 	end

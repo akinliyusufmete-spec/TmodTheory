@@ -11,7 +11,8 @@
 	    GameConfig.PICKUP_PROMPT). Collects if a slot is free, otherwise the
 	    client gets a PickupFailed ("Inventory full").
 	  - UseItem: validates slot 1 and applies the effect —
-	      ZESTY -> StaminaRestore to the client (instant stamina reset)
+	      ZESTY -> StaminaRestore to the client (instant stamina reset); under
+	               the Frenzy modifier also a timed speed boost
 	      BSODA -> server-stepped projectile that knocks back + stuns NPCs
 	  - Vending: ProximityPrompt opens the client popup; BuyItem validates
 	    nickel count and a free slot before granting.
@@ -28,6 +29,7 @@ local Debris = game:GetService("Debris")
 
 local AssetResolver = require(script.Parent.AssetResolver)
 local SoundLoader = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("SoundLoader"))
+local ModifierConfig = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("ModifierConfig"))
 
 local ItemEconomy = {}
 
@@ -575,6 +577,11 @@ function ItemEconomy.init(ctx)
 			state.slots[2] = nil
 			syncInventory(player)
 			ctx.remotes.StaminaRestore:FireClient(player)
+			-- Frenzy: a Zesty Bar is also a short burst of extra speed
+			if ctx.modifiers and ctx.modifiers.has("Frenzy") then
+				local def = ModifierConfig.LIST.Frenzy
+				ctx.modifiers.addTimedBoost(player, def.ZESTY_MULT, def.ZESTY_TIME)
+			end
 		elseif itemId == "ALARM" then
 			-- drop a ringing clock at your feet; ChatRevive investigates it
 			local character = player.Character

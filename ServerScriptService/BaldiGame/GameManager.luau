@@ -21,6 +21,9 @@
 ]]
 
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local ModifierConfig = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("ModifierConfig"))
 
 local GameManager = {}
 
@@ -105,11 +108,14 @@ function GameManager.init(ctx)
 
 	-- 0..1 "heat" the AIs read to escalate with each notebook collected.
 	-- CURVE > 1 keeps it calm early and ramps hard near the last notebooks.
+	-- A modifier may raise the cap past 1 (Summer Classes keeps notebooks
+	-- coming after the last one, up to GameConfig.HEAT.SUMMER_MAX).
 	function self.getHeat()
 		if not config.HEAT or not config.HEAT.ENABLED or notebooksTotal <= 0 then
 			return 0
 		end
-		local raw = math.clamp(notebooksCollected / notebooksTotal, 0, 1)
+		local cap = (ctx.modifiers and ctx.modifiers.heatCap()) or 1
+		local raw = math.clamp(notebooksCollected / notebooksTotal, 0, math.max(cap, 1))
 		return raw ^ (config.HEAT.CURVE or 1)
 	end
 
@@ -302,7 +308,13 @@ function GameManager.init(ctx)
 			teleportToLobby(player)
 		end
 		resetNpcs()
+		-- after resetNpcs: features undo their run here (EVIL parks its twins
+		-- in stop, which must come after they were reset to spawn)
+		if ctx.modifiers then
+			ctx.modifiers.endRun()
+		end
 		notebooksCollected = 0
+		workspace:SetAttribute("NotebooksCollected", 0)
 		remotes.RoundEnded:FireAllClients()
 		-- a finished match sends everyone back to the Hub to regroup
 		if wasMatch and ctx.matchServer then
@@ -341,6 +353,9 @@ function GameManager.init(ctx)
 			participants[player] = nil
 			return
 		end
+		if ctx.modifiers then
+			ctx.modifiers.onPlayerJoined(player)
+		end
 		fireGameStarted(player)
 		remotes.NotebookCollected:FireClient(player, notebooksCollected, notebooksTotal)
 		if ctx.exitDoor.open then
@@ -350,13 +365,16 @@ function GameManager.init(ctx)
 		end
 	end
 
-	local function beginCountdown(firstPlayer, modeId)
+	-- stacks/rolled: a validated modifier selection (ctx.modifiers.resolve),
+	-- or nil for a plain run
+	local function beginCountdown(firstPlayer, modeId, stacks, rolled)
 		currentModeId = modeId or "CLASSIC"
 		local mode = self.getModeConfig()
 		phase = "COUNTDOWN"
 		countdownToken += 1
 		local token = countdownToken
 		notebooksCollected = 0
+		workspace:SetAttribute("NotebooksCollected", 0)
 		if ctx.loadMap then
 			ctx.loadMap() -- the first run brings the school into the world; it stays from then on
 		end
@@ -382,6 +400,13 @@ function GameManager.init(ctx)
 		local countdownSeconds = mode.COUNTDOWN or config.COUNTDOWN_SECONDS
 		remotes.GameCountdown:FireClient(firstPlayer, countdownSeconds)
 
+		-- modifiers start LAST: after applyNpcSet (EVIL un-parks its twins in
+		-- start), the NPC round hooks, notebooks/economy, and once the first
+		-- player is a participant standing at the entrance
+		if stacks and ctx.modifiers then
+			ctx.modifiers.beginRun(firstPlayer, stacks, rolled)
+		end
+
 		-- multiplayer modes get announced so the whole server can pile in
 		if not mode.SINGLE_PLAYER and currentModeId ~= "CLASSIC" then
 			remotes.RoundAnnounce:FireAllClients(
@@ -397,6 +422,9 @@ function GameManager.init(ctx)
 			end
 			phase = "ACTIVE"
 			roundStartedAt = os.clock()
+			if ctx.modifiers then
+				ctx.modifiers.onRunActive()
+			end
 			if ctx.badges then
 				local count = 0
 				for _ in pairs(participants) do
@@ -440,6 +468,9 @@ function GameManager.init(ctx)
 			participants[player] = true
 			roundStats[player] = { detentions = 0, grabs = 0 }
 			teleportToRoundSpawn(player, true)
+			if ctx.modifiers then
+				ctx.modifiers.onPlayerJoined(player)
+			end
 			remotes.GameCountdown:FireClient(player, self.getModeConfig().COUNTDOWN or config.COUNTDOWN_SECONDS)
 		elseif currentModeId == "MATCH" and phase == "ACTIVE" then
 			joinActiveRound(player)
@@ -471,6 +502,10 @@ function GameManager.init(ctx)
 
 	function self.onNotebookCollected(byPlayer)
 		notebooksCollected = notebooksCollected + 1
+		workspace:SetAttribute("NotebooksCollected", notebooksCollected)
+		if ctx.modifiers then
+			ctx.modifiers.onNotebookCollected(byPlayer, notebooksCollected, notebooksTotal)
+		end
 		remotes.NotebookCollected:FireAllClients(notebooksCollected, notebooksTotal, byPlayer.UserId)
 
 		if notebooksCollected == 1 then
@@ -478,7 +513,9 @@ function GameManager.init(ctx)
 			setNpcsPaused(false)
 			remotes.PhaseChanged:FireAllClients("CHARACTERS_ACTIVE")
 		end
-		if notebooksCollected >= notebooksTotal then
+		-- exactly once: Summer Classes keeps notebooks coming past the total,
+		-- and those extras must not re-enrage / re-open
+		if notebooksCollected == notebooksTotal then
 			-- final notebook: enrage the mode's hunter + exit phase
 			local hunter = ctx.npcs[self.getModeConfig().HUNTER or "ChatRevive"]
 			if hunter and hunter.enrage then
@@ -496,6 +533,9 @@ function GameManager.init(ctx)
 			return
 		end
 		participants[player] = nil
+		if ctx.modifiers then
+			ctx.modifiers.onPlayerLeft(player)
+		end
 
 		-- the catcher's "Caught" voiceline (shown to the victim over the lose screen)
 		if ctx.voicelines then
@@ -529,6 +569,9 @@ function GameManager.init(ctx)
 			return
 		end
 		participants[player] = nil
+		if ctx.modifiers then
+			ctx.modifiers.onPlayerLeft(player)
+		end
 		if ctx.badges then
 			ctx.badges.noteDown(player)
 		end
@@ -563,8 +606,10 @@ function GameManager.init(ctx)
 		participants[player] = nil
 
 		local elapsed = os.clock() - roundStartedAt
+		-- a modified run never sets a record: keep (and show) the old best
+		local modified = ctx.modifiers ~= nil and ctx.modifiers.isModifiedRun()
 		local best = bestTimes[player.UserId]
-		if not best or elapsed < best then
+		if not modified and (not best or elapsed < best) then
 			best = elapsed
 			bestTimes[player.UserId] = best
 		end
@@ -586,11 +631,28 @@ function GameManager.init(ctx)
 			end
 		end
 
+		-- modifier rows (e.g. Summer Classes' extra notebooks), then the run's
+		-- bonus % on top of everything above
+		if ctx.modifiers then
+			for _, row in ipairs(ctx.modifiers.breakdownRows(player)) do
+				award = award + row.amount
+				table.insert(breakdown, row)
+			end
+			local pct = ctx.modifiers.bonusPct()
+			if pct > 0 then
+				local bonus = ModifierConfig.bonusAmount(award, pct)
+				award = award + bonus
+				table.insert(breakdown, { label = "Modifiers (+" .. pct .. "%)", amount = bonus })
+			end
+			-- rows are in: this player is out of the run now
+			ctx.modifiers.onPlayerLeft(player)
+		end
+
 		local balance = nil
 
 		-- persist: wins unlock the special modes; times feed the records page
 		if ctx.profiles then
-			local firstWin = ctx.profiles.recordWin(player, elapsed, grade)
+			local firstWin = ctx.profiles.recordWin(player, elapsed, grade, { modified = modified })
 			if ctx.profiles.addCurrency then
 				balance = ctx.profiles.addCurrency(player, award) -- before sendStats so it's current
 			end
@@ -617,6 +679,7 @@ function GameManager.init(ctx)
 				modeId = currentModeId,
 				detentions = getStats(player).detentions,
 				wins = ctx.profiles and ctx.profiles.get(player).wins or 0,
+				modified = modified, -- the run had modifiers on (Badges may skip time badges)
 			})
 		end
 
@@ -649,6 +712,9 @@ function GameManager.init(ctx)
 			if participants[player] then
 				participants[player] = nil
 				roundStats[player] = nil
+				if ctx.modifiers then
+					ctx.modifiers.onPlayerLeft(player)
+				end
 				-- end any detention now, or its timer would later unanchor the
 				-- respawned character floating on the main screen
 				ctx.detention.releasePlayer(player)
@@ -701,6 +767,9 @@ function GameManager.init(ctx)
 	end
 
 	Players.PlayerRemoving:Connect(function(player)
+		if participants[player] and ctx.modifiers then
+			ctx.modifiers.onPlayerLeft(player)
+		end
 		participants[player] = nil
 		roundStats[player] = nil
 		ctx.detention.forget(player)
@@ -711,7 +780,9 @@ function GameManager.init(ctx)
 
 	-- ===================== Play button =====================
 
-	remotes.RequestStart.OnServerEvent:Connect(function(player, requestedModeId)
+	-- selection: the client's modifier panel picks (validated by
+	-- ctx.modifiers.resolve; ignored for modes/players that can't use them)
+	remotes.RequestStart.OnServerEvent:Connect(function(player, requestedModeId, selection)
 		if (startDebounce[player] or 0) > os.clock() then
 			return
 		end
@@ -750,7 +821,21 @@ function GameManager.init(ctx)
 				remotes.RoundAnnounce:FireClient(player, "Win a round to unlock " .. mode.displayName .. "!")
 				return
 			end
-			beginCountdown(player, modeId)
+			local stacks, rolled = nil, nil
+			if ctx.modifiers then
+				stacks, rolled = ctx.modifiers.resolve(player, selection, modeId)
+			end
+			if stacks and ctx.profiles and ctx.profiles.saveModifierLoadout then
+				-- remember the panel picks (raw, re-sanitized by the profile)
+				ctx.profiles.saveModifierLoadout(player, selection)
+			end
+			-- resolve can yield (first badge-ownership fetch): someone else may
+			-- have started a round meanwhile, or this player left / respawned
+			if phase ~= "IDLE" or participants[player] or not player.Parent
+				or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+				return
+			end
+			beginCountdown(player, modeId, stacks, rolled)
 		elseif self.getModeConfig().SINGLE_PLAYER then
 			-- someone's single-player run is in progress: can't pile in
 			remotes.RoundAnnounce:FireClient(player,
@@ -759,6 +844,9 @@ function GameManager.init(ctx)
 			participants[player] = true
 			roundStats[player] = { detentions = 0, grabs = 0 }
 			teleportToRoundSpawn(player, true)
+			if ctx.modifiers then
+				ctx.modifiers.onPlayerJoined(player)
+			end
 			remotes.GameCountdown:FireClient(player,
 				self.getModeConfig().COUNTDOWN or config.COUNTDOWN_SECONDS)
 		else -- ACTIVE: join the round in progress
