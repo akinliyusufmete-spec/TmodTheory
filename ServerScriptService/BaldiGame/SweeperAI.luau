@@ -145,7 +145,9 @@ local function createSweeper(ctx, key, cfg)
 				local rest = rng:NextNumber(cfg.WAIT_MIN, cfg.WAIT_MAX)
 				local heatCfg = ctx.config.HEAT
 				if heatCfg and heatCfg.SWEEPER_WAIT_SCALE and ctx.manager and ctx.manager.getHeat then
-					rest = rest * (1 + (heatCfg.SWEEPER_WAIT_SCALE - 1) * ctx.manager.getHeat())
+					-- floor: Summer Classes can push heat past 1, which would
+					-- otherwise drive the rest to zero or below
+					rest = rest * math.max(1 + (heatCfg.SWEEPER_WAIT_SCALE - 1) * ctx.manager.getHeat(), 0.2)
 				end
 				task.wait(rest)
 			end

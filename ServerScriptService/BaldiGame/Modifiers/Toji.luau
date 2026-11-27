@@ -67,7 +67,8 @@ local function tick(env)
 			end
 			for _, npc in pairs(ctx.npcs) do
 				local base = npc.base
-				if base and not base.parked and not base.ignoreModifiers and base.model.Parent then
+				-- paused = not awake yet (before the first notebook): no shatter
+				if base and not base.parked and not base.paused and not base.ignoreModifiers and base.model.Parent then
 					local entry = mine[base]
 					local inside = (base.root.Position - hrp.Position).Magnitude <= radius
 					if inside then

@@ -114,9 +114,11 @@ function GameManager.init(ctx)
 		if not config.HEAT or not config.HEAT.ENABLED or notebooksTotal <= 0 then
 			return 0
 		end
-		local cap = (ctx.modifiers and ctx.modifiers.heatCap()) or 1
-		local raw = math.clamp(notebooksCollected / notebooksTotal, 0, math.max(cap, 1))
-		return raw ^ (config.HEAT.CURVE or 1)
+		-- Summer Classes' extra notebooks push the ratio past 1; the heat itself
+		-- (after the curve) is what heatCap() limits
+		local cap = math.max((ctx.modifiers and ctx.modifiers.heatCap()) or 1, 1)
+		local raw = math.max(notebooksCollected / notebooksTotal, 0)
+		return math.min(raw ^ (config.HEAT.CURVE or 1), cap)
 	end
 
 	-- ===================== game modes =====================

@@ -20,7 +20,7 @@ Opens when a player who has unlocked modifiers presses Play for a Classic run. U
 
 | Path | Class | Notes |
 |---|---|---|
-| `ModifiersGui` | ScreenGui | `ResetOnSpawn = false`, `Enabled = false` (the code turns it on) |
+| `ModifiersGui` | ScreenGui | `ResetOnSpawn = false`, `Enabled = false` (the code turns it on). Give it a `DisplayOrder` above the main menu, and make `Panel` (or a backdrop) cover the menu buttons so they can't be clicked through it |
 | `ModifiersGui.Panel` | Frame / ImageLabel | the window that animates in and out |
 | `Panel.List` | ScrollingFrame | holds the cards; give it a `UIListLayout` or `UIGridLayout` |
 | `Panel.List.CardTemplate` | Frame / ImageLabel | `Visible = false`. Cloned once per modifier that has no hand-made card |
@@ -28,6 +28,8 @@ Opens when a player who has unlocked modifiers presses Play for a Classic run. U
 | `Panel.StartButton` | GuiButton | starts the run with the selection |
 | `Panel.ClearButton` | GuiButton | deselects everything |
 | `Panel.BackButton` | GuiButton | closes the panel without starting |
+
+`Panel` and `Panel.StartButton` are required. Without either, the panel counts as missing and Play starts a normal run.
 
 ### Cards
 
@@ -58,7 +60,8 @@ Card ids, in panel order: `Frenzy`, `Toji`, `PresidentialTortoise`, `ColorInvers
 | Path | Class | Notes |
 |---|---|---|
 | `ModifierHudGui` | ScreenGui | `ResetOnSpawn = false` |
-| `ModifierHudGui.PunchButton` | GuiButton | the touch punch button. The code shows it only while Grand Bully is active |
+| `ModifierHudGui.PunchButton` | GuiButton | the touch punch button. The code shows it only while Grand Bully is active, and only on touch devices |
+| `ModifierHudGui.FireDrillTimer` | TextLabel | optional, anywhere inside `ModifierHudGui`. Fire Drill writes the countdown ("2:59") here and turns it red under 30 s. Without it, Fire Drill shows banners at 2:00, 1:00, 0:30 and 0:10 instead |
 
 ---
 

@@ -363,7 +363,7 @@ GameConfig.HEAT = {
 	SWEEPER_WAIT_SCALE = 0.45, -- sweeper rest time shrinks to this fraction at full heat
 	SILVER_SIGHT_BONUS = 18, -- studs added to Silver's sight range at full heat
 	-- heat may exceed 1, up to this, while the Summer Classes modifier is on
-	-- (it caps the collected/total ratio; heat is that ratio ^ CURVE, so ~2.07 at 1.5)
+	-- (each extra notebook keeps raising it; the curved heat value stops here)
 	SUMMER_MAX = 1.5,
 }
 
