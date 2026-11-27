@@ -173,13 +173,20 @@ function GameManager.init(ctx)
 	-- Park the characters that sit this mode out (they hold far above
 	-- their spawn, frozen, until a mode that uses them resets the board).
 	-- whether a character takes the field this round: in the mode roster, and
-	-- (when DEBUG is on) not switched off in GameConfig.DEBUG.NPCS
+	-- (when DEBUG is on) not switched off in GameConfig.DEBUG.NPCS. An EVIL
+	-- Theory twin ("ChatReviveEvil") follows its original's entries, and only
+	-- plays while the EvilTheory modifier is on.
+	local NpcRoster = require(script.Parent.NpcRoster)
 	local function npcEnabled(name, roster)
-		if not roster[name] then
+		local baseName = NpcRoster.baseName(name)
+		if baseName ~= name and not (ctx.modifiers and ctx.modifiers.has("EvilTheory")) then
+			return false
+		end
+		if not roster[baseName] then
 			return false
 		end
 		local dbg = config.DEBUG
-		if dbg and dbg.ENABLED and dbg.NPCS and dbg.NPCS[name] == false then
+		if dbg and dbg.ENABLED and dbg.NPCS and dbg.NPCS[baseName] == false then
 			return false
 		end
 		return true
@@ -210,11 +217,9 @@ function GameManager.init(ctx)
 		if hrp.Anchored then -- countdown or detention...
 			-- ...but a player in Silver's grasp — or rooted in Frosty's
 			-- BEARTrapper — stays fair game: getting held in the open with a
-			-- hunter nearby SHOULD be lethal
-			local silver = ctx.npcs.Silver
-			local frosty = ctx.npcs.Frosty
-			local held = (silver and silver.isGrabbing and silver.isGrabbing(player))
-				or (frosty and frosty.isTrapped and frosty.isTrapped(player))
+			-- hunter nearby SHOULD be lethal (an EVIL twin's grip/trap counts too)
+			local held = NpcRoster.any(ctx, "Silver", "isGrabbing", player)
+				or NpcRoster.any(ctx, "Frosty", "isTrapped", player)
 			if not held then
 				return false
 			end

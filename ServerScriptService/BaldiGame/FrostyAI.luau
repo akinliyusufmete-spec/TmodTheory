@@ -34,6 +34,7 @@ local Debris = game:GetService("Debris")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 local AssetResolver = require(script.Parent.AssetResolver)
 local SoundLoader = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("SoundLoader"))
 
@@ -102,20 +103,26 @@ local function placeholderTrap(kind)
 	return model
 end
 
-function FrostyAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function FrostyAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.FROSTY
 	local silverCfg = ctx.config.NPC.SILVER or {}
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name         = cfg.NAME,
+		name         = cfg.NAME .. suffix,
+		rig          = cfg.NAME,
 		bodyColor    = COLOR_BODY,
 		headColor    = COLOR_HEAD,
 		transparency = 0.15,
 		glowColor    = Color3.fromRGB(150, 220, 255),
 		tagColor     = Color3.fromRGB(170, 230, 255),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.FROSTY)
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.FROSTY + (opts.spawnOffset or Vector3.zero))
 	self.base  = base
 	self.model = model
 
@@ -280,10 +287,9 @@ function FrostyAI.init(ctx)
 		-- only let go of a player the trap itself is holding: someone caught,
 		-- detained or grabbed meanwhile is another system's business
 		local hrp = rootOf(player)
-		local silver = ctx.npcs.Silver
 		if hrp and ctx.manager and ctx.manager.isParticipant(player)
 			and not ctx.detention.isDetained(player)
-			and not (silver and silver.isGrabbing and silver.isGrabbing(player)) then
+			and not NpcRoster.any(ctx, "Silver", "isGrabbing", player) then
 			hrp.Anchored = false
 		end
 		if player.Parent then
@@ -352,7 +358,10 @@ function FrostyAI.init(ctx)
 	end
 
 	-- the BEARTrapper's minigame shares Silver's remotes (one hold at a time:
-	-- neither springs on a player who's already anchored)
+	-- neither springs on a player who's already anchored). An EVIL twin
+	-- connects its own handler too: it only acts on that Frosty's own
+	-- bearHeld, and a held (anchored) player can't spring a second Frosty's
+	-- trap, so exactly one handler answers each hit.
 	ctx.remotes.SilverHit.OnServerEvent:Connect(function(player)
 		local held = bearHeld[player]
 		if not held then
@@ -600,7 +609,7 @@ function FrostyAI.init(ctx)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.Frosty = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

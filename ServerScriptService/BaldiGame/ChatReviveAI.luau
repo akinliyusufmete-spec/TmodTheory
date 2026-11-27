@@ -69,7 +69,12 @@ local function flat(v)
 	return Vector3.new(v.X, 0, v.Z)
 end
 
-function ChatReviveAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function ChatReviveAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.CHATREVIVE
 	local self = {
 		ctx = ctx,
@@ -90,12 +95,13 @@ function ChatReviveAI.init(ctx)
 	local PATH_LEAVE_DISTANCE = 4 -- further than this from a cached route = re-route
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(255, 90, 80),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHATREVIVE,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHATREVIVE + (opts.spawnOffset or Vector3.zero),
 		(ROAM_DASH_SPEED + DASH_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -953,7 +959,7 @@ function ChatReviveAI.init(ctx)
 		holdStill()
 	end
 
-	ctx.npcs.ChatRevive = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

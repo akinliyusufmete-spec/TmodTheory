@@ -31,17 +31,23 @@ local SilverAI = {}
 local COLOR_BODY = Color3.fromRGB(185, 190, 200)
 local COLOR_HEAD = Color3.fromRGB(215, 220, 230)
 
-function SilverAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function SilverAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.SILVER
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(225, 230, 240),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.SILVER,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.SILVER + (opts.spawnOffset or Vector3.zero),
 		(cfg.ROAM_SPEED + cfg.CHASE_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -129,6 +135,10 @@ function SilverAI.init(ctx)
 	end
 
 	-- ---------- minigame remotes ----------
+	-- An EVIL twin connects these too: each handler only acts when ITS Silver
+	-- holds the player, and a held (anchored) player can't be grabbed by a
+	-- second Silver, so exactly one handler answers each hit (and only one
+	-- pair of Scissors is spent on an escape).
 
 	ctx.remotes.SilverHit.OnServerEvent:Connect(function(player)
 		if not grabbed or grabbed.player ~= player then
@@ -290,7 +300,7 @@ function SilverAI.init(ctx)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.Silver = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

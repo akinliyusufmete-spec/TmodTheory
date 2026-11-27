@@ -213,10 +213,12 @@ local function addNameTag(model, spec)
 	tag.Parent = billboard
 end
 
--- spec = { name, bodyColor, headColor, transparency?, glowColor?, tagColor? }
+-- spec = { name, rig?, bodyColor, headColor, transparency?, glowColor?, tagColor? }
 -- (the color fields style the placeholder only; your rig is used as-is)
+-- rig: the BaldiAssets/Npcs/<rig> to clone when it isn't `name` (an EVIL
+-- Theory twin "ChatReviveEvil" wears ChatRevive's rig)
 function NpcFactory.create(spec, parent)
-	local template = AssetResolver.npcTemplate(spec.name)
+	local template = AssetResolver.npcTemplate(spec.rig or spec.name)
 	local model
 	if template then
 		model = template:Clone()
