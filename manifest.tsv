@@ -1,0 +1,185 @@
+idx	bytes	fnv1a32	path	status	studio_path	note
+1	794	be27e77a	Workspace/Assets/Door/BlueDoor/Main.server.luau	used	Workspace/Assets/Door/BlueDoor/Main.server.luau	
+2	297	674be2c2	Workspace/Assets/Part/Script.server.luau	used	Workspace/Assets/Part/Script.server.luau	
+3	297	674be2c2	_Duplicates/Workspace/Assets/Part_2/Script.server.luau	duplicate	Workspace/Assets/Part_2/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+4	794	be27e77a	_Duplicates/Workspace/Assets/Door_2/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_2/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+5	794	be27e77a	_Duplicates/Workspace/Assets/Door_3/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_3/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+6	794	be27e77a	_Duplicates/Workspace/Assets/Door_4/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_4/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+7	297	674be2c2	_Duplicates/Workspace/Assets/Part_3/Script.server.luau	duplicate	Workspace/Assets/Part_3/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+8	794	be27e77a	_Duplicates/Workspace/Assets/Door_5/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_5/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+9	794	be27e77a	_Duplicates/Workspace/Assets/Door_6/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_6/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+10	0	811c9dc5	_Unused/Workspace/Assets/Machine_BSODA/Script.server.luau	unused	Workspace/Assets/Machine_BSODA/Script.server.luau	Empty script (0 bytes)
+11	297	674be2c2	_Duplicates/Workspace/Assets/Part_4/Script.server.luau	duplicate	Workspace/Assets/Part_4/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+12	109	db9d32cb	Workspace/Assets/Merry-Go-round/Union/Script.server.luau	used	Workspace/Assets/Merry-Go-round/Union/Script.server.luau	
+13	109	db9d32cb	_Duplicates/Workspace/Assets/Merry-Go-round/Union_2/Script.server.luau	duplicate	Workspace/Assets/Merry-Go-round/Union_2/Script.server.luau	identical to #12 Workspace/Assets/Merry-Go-round/Union/Script.server.luau
+14	109	db9d32cb	_Duplicates/Workspace/Assets/Merry-Go-round/Union_3/Script.server.luau	duplicate	Workspace/Assets/Merry-Go-round/Union_3/Script.server.luau	identical to #12 Workspace/Assets/Merry-Go-round/Union/Script.server.luau
+15	109	db9d32cb	_Duplicates/Workspace/Assets/Merry-Go-round/Union_4/Script.server.luau	duplicate	Workspace/Assets/Merry-Go-round/Union_4/Script.server.luau	identical to #12 Workspace/Assets/Merry-Go-round/Union/Script.server.luau
+16	109	db9d32cb	_Duplicates/Workspace/Assets/Merry-Go-round/EnhancedCone/Script.server.luau	duplicate	Workspace/Assets/Merry-Go-round/EnhancedCone/Script.server.luau	identical to #12 Workspace/Assets/Merry-Go-round/Union/Script.server.luau
+17	297	674be2c2	_Duplicates/Workspace/Assets/Part_5/Script.server.luau	duplicate	Workspace/Assets/Part_5/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+18	794	be27e77a	_Duplicates/Workspace/Assets/Door_7/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_7/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+19	794	be27e77a	_Duplicates/Workspace/Assets/Door_8/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_8/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+20	794	be27e77a	_Duplicates/Workspace/Assets/Door_9/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_9/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+21	297	674be2c2	_Duplicates/Workspace/Assets/Part_6/Script.server.luau	duplicate	Workspace/Assets/Part_6/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+22	794	be27e77a	_Duplicates/Workspace/Assets/Door_10/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_10/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+23	297	674be2c2	_Duplicates/Workspace/Assets/Part_7/Script.server.luau	duplicate	Workspace/Assets/Part_7/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+24	794	be27e77a	_Duplicates/Workspace/Assets/Door_11/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_11/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+25	297	674be2c2	_Duplicates/Workspace/Assets/Part_8/Script.server.luau	duplicate	Workspace/Assets/Part_8/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+26	297	674be2c2	_Duplicates/Workspace/Assets/Part_9/Script.server.luau	duplicate	Workspace/Assets/Part_9/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+27	794	be27e77a	_Duplicates/Workspace/Assets/Door_12/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_12/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+28	297	674be2c2	_Duplicates/Workspace/Assets/Part_10/Script.server.luau	duplicate	Workspace/Assets/Part_10/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+29	297	674be2c2	_Duplicates/Workspace/Assets/Part_11/Script.server.luau	duplicate	Workspace/Assets/Part_11/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+30	297	674be2c2	_Duplicates/Workspace/Assets/Part_12/Script.server.luau	duplicate	Workspace/Assets/Part_12/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+31	297	674be2c2	_Duplicates/Workspace/Assets/Part_13/Script.server.luau	duplicate	Workspace/Assets/Part_13/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+32	297	674be2c2	_Duplicates/Workspace/Assets/Part_14/Script.server.luau	duplicate	Workspace/Assets/Part_14/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+33	794	be27e77a	_Duplicates/Workspace/Assets/Door_13/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_13/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+34	297	674be2c2	_Duplicates/Workspace/Assets/Part_15/Script.server.luau	duplicate	Workspace/Assets/Part_15/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+35	794	be27e77a	_Duplicates/Workspace/Assets/Door_14/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_14/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+36	794	be27e77a	_Duplicates/Workspace/Assets/Door_15/BlueDoor/Main.server.luau	duplicate	Workspace/Assets/Door_15/BlueDoor/Main.server.luau	identical to #1 Workspace/Assets/Door/BlueDoor/Main.server.luau
+37	297	674be2c2	_Duplicates/Workspace/Assets/Part_16/Script.server.luau	duplicate	Workspace/Assets/Part_16/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+38	0	811c9dc5	_Duplicates/Workspace/Assets/Machine_ZestyBar/Script.server.luau	duplicate	Workspace/Assets/Machine_ZestyBar/Script.server.luau	identical to #10 Workspace/Assets/Machine_BSODA/Script.server.luau
+39	297	674be2c2	_Duplicates/Workspace/Assets/Part_17/Script.server.luau	duplicate	Workspace/Assets/Part_17/Script.server.luau	identical to #2 Workspace/Assets/Part/Script.server.luau
+40	9440	406a7b2d	ReplicatedFirst/LoadingScreen.client.luau	used	ReplicatedFirst/LoadingScreen.client.luau	
+41	2729	8639ee40	StarterPlayer/StarterPlayerScripts/Main.client.luau	used	StarterPlayer/StarterPlayerScripts/Main.client.luau	
+42	1809	18ca8aa8	StarterPlayer/StarterPlayerScripts/BaldiClient/DetentionOverlay.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/DetentionOverlay.luau	
+43	1807	f7d9bfcb	StarterPlayer/StarterPlayerScripts/BaldiClient/FrostyVignette.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/FrostyVignette.luau	
+44	15325	8412268e	StarterPlayer/StarterPlayerScripts/BaldiClient/HudController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/HudController.luau	
+45	8865	827a3882	StarterPlayer/StarterPlayerScripts/BaldiClient/InputHandler.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/InputHandler.luau	
+46	3174	e9ccff17	StarterPlayer/StarterPlayerScripts/BaldiClient/ItemUseClient.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/ItemUseClient.luau	
+47	4150	93895064	StarterPlayer/StarterPlayerScripts/BaldiClient/BeansGumClient.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/BeansGumClient.luau	
+48	45244	dc50699c	StarterPlayer/StarterPlayerScripts/BaldiClient/MenuController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/MenuController.luau	
+49	5139	0dbedc64	StarterPlayer/StarterPlayerScripts/BaldiClient/SilverMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/SilverMinigame.luau	
+50	4462	35580c52	StarterPlayer/StarterPlayerScripts/BaldiClient/SoundController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/SoundController.luau	
+51	5895	f56d5e37	StarterPlayer/StarterPlayerScripts/BaldiClient/StaminaController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/StaminaController.luau	
+52	5327	2482bc63	_Unused/StarterPlayer/StarterPlayerScripts/BaldiClient/UiKit.luau	unused	StarterPlayer/StarterPlayerScripts/BaldiClient/UiKit.luau	ModuleScript never required by any script
+53	1239	88c1a24b	StarterPlayer/StarterPlayerScripts/BaldiClient/VendingMachineUI.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/VendingMachineUI.luau	
+54	5302	488175f6	StarterPlayer/StarterPlayerScripts/BaldiClient/NotebookMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/NotebookMinigame.luau	
+55	4254	b8f73a4e	StarterPlayer/StarterPlayerScripts/BaldiClient/ChaseTension.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/ChaseTension.luau	
+56	6491	f3f44589	StarterPlayer/StarterPlayerScripts/BaldiClient/SequenceMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/SequenceMinigame.luau	
+57	11005	65ebcefd	StarterPlayer/StarterPlayerScripts/BaldiClient/NpcAnimatorClient.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/NpcAnimatorClient.luau	
+58	4377	8b4b428a	StarterPlayer/StarterPlayerScripts/BaldiClient/MathMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/MathMinigame.luau	
+59	5986	c7cbd041	StarterPlayer/StarterPlayerScripts/BaldiClient/MemoryMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/MemoryMinigame.luau	
+60	5687	a30a6bcb	StarterPlayer/StarterPlayerScripts/BaldiClient/HudLayoutEditor.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/HudLayoutEditor.luau	
+61	2855	fd84aebe	StarterPlayer/StarterPlayerScripts/BaldiClient/CosmeticState.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/CosmeticState.luau	
+62	3501	11ac9c9d	StarterPlayer/StarterPlayerScripts/BaldiClient/NotebookSkinner.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/NotebookSkinner.luau	
+63	5011	5a8f5b46	StarterPlayer/StarterPlayerScripts/BaldiClient/ChainMinigame.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/ChainMinigame.luau	
+64	16944	2d7728c6	StarterPlayer/StarterPlayerScripts/BaldiClient/GuyRevealFlash.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/GuyRevealFlash.luau	
+65	14248	b3782887	StarterPlayer/StarterPlayerScripts/BaldiClient/UiFx.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/UiFx.luau	
+66	8546	0cb3c579	StarterPlayer/StarterPlayerScripts/BaldiClient/KeystrokesController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/KeystrokesController.luau	
+67	13427	22d3c741	StarterPlayer/StarterPlayerScripts/BaldiClient/VoicelineController.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/VoicelineController.luau	
+68	12735	9b0df9f2	StarterPlayer/StarterPlayerScripts/BaldiClient/DeviceUi.luau	used	StarterPlayer/StarterPlayerScripts/BaldiClient/DeviceUi.luau	
+69	16311	0668423f	ReplicatedStorage/EzUISprings/init.luau	used	ReplicatedStorage/EzUISprings/init.luau	
+70	1345	23bc20ac	ReplicatedStorage/EzUISprings/Spring.luau	used	ReplicatedStorage/EzUISprings/Spring.luau	
+71	2186	957ea448	ReplicatedStorage/EzUISprings/Settings.luau	used	ReplicatedStorage/EzUISprings/Settings.luau	
+72	1092	ab6183f2	ReplicatedStorage/EzUISprings/InstanceFunctions.luau	used	ReplicatedStorage/EzUISprings/InstanceFunctions.luau	
+73	3003	f05447df	ReplicatedStorage/BaldiShared/AssetConfig.luau	used	ReplicatedStorage/BaldiShared/AssetConfig.luau	
+74	51232	57868490	ReplicatedStorage/BaldiShared/GameConfig.luau	used	ReplicatedStorage/BaldiShared/GameConfig.luau	
+75	4083	ec8ecdee	ReplicatedStorage/BaldiShared/Cosmetics.luau	used	ReplicatedStorage/BaldiShared/Cosmetics.luau	
+76	14787	d907f69c	ReplicatedStorage/BaldiShared/CharacterConfig.luau	used	ReplicatedStorage/BaldiShared/CharacterConfig.luau	
+77	4801	64eb8943	ReplicatedStorage/BaldiShared/SoundLoader.luau	used	ReplicatedStorage/BaldiShared/SoundLoader.luau	
+78	8277	ed92c9b4	ReplicatedStorage/BaldiShared/AnimationLoader.luau	used	ReplicatedStorage/BaldiShared/AnimationLoader.luau	
+79	285	7fc1654e	_Unused/ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau	unused	ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau	Script inside an item template; AssetResolver.preparePropClone destroys scripts when cloning, so it never runs
+80	285	7fc1654e	_Duplicates/ReplicatedStorage/BaldiShared/BaldiAssets/Items/Notebook/Script.server.luau	duplicate	ReplicatedStorage/BaldiShared/BaldiAssets/Items/Notebook/Script.server.luau	identical to #79 ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau
+81	285	7fc1654e	_Duplicates/ReplicatedStorage/BaldiShared/BaldiAssets/Items/ZESTY/Script.server.luau	duplicate	ReplicatedStorage/BaldiShared/BaldiAssets/Items/ZESTY/Script.server.luau	identical to #79 ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau
+82	285	7fc1654e	_Duplicates/ReplicatedStorage/BaldiShared/BaldiAssets/Items/ALARM/Script.server.luau	duplicate	ReplicatedStorage/BaldiShared/BaldiAssets/Items/ALARM/Script.server.luau	identical to #79 ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau
+83	285	7fc1654e	_Duplicates/ReplicatedStorage/BaldiShared/BaldiAssets/Items/SCISSORS/Script.server.luau	duplicate	ReplicatedStorage/BaldiShared/BaldiAssets/Items/SCISSORS/Script.server.luau	identical to #79 ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau
+84	285	7fc1654e	_Duplicates/ReplicatedStorage/BaldiShared/BaldiAssets/Items/Nickel/Script.server.luau	duplicate	ReplicatedStorage/BaldiShared/BaldiAssets/Items/Nickel/Script.server.luau	identical to #79 ReplicatedStorage/BaldiShared/BaldiAssets/Items/BSODA/Script.server.luau
+85	365	4d214aa0	_Unused/ReplicatedStorage/BaldiShared/BaldiAssets/Npcs/Guidelines/Torso/Attachment1/face/Script.server.luau	unused	ReplicatedStorage/BaldiShared/BaldiAssets/Npcs/Guidelines/Torso/Attachment1/face/Script.server.luau	Script inside an NPC rig template; NpcFactory.create destroys scripts when cloning, so it never runs
+86	1839	0ccc78e6	_Unused/ReplicatedStorage/Packages/README.luau	unused	ReplicatedStorage/Packages/README.luau	Documentation-only ModuleScript, never required
+87	64726	e5b92a1a	ReplicatedStorage/Packages/HyperText/init.luau	used	ReplicatedStorage/Packages/HyperText/init.luau	
+88	1245	40743dca	ReplicatedStorage/Packages/HyperText/Scheduler.luau	used	ReplicatedStorage/Packages/HyperText/Scheduler.luau	
+89	12129	e9ffa0bf	ReplicatedStorage/Packages/HyperText/Config.luau	used	ReplicatedStorage/Packages/HyperText/Config.luau	
+90	27275	b3d0a8e2	ReplicatedStorage/Packages/HyperText/Types.luau	used	ReplicatedStorage/Packages/HyperText/Types.luau	
+91	23307	db45087e	ReplicatedStorage/Packages/HyperText/Util.luau	used	ReplicatedStorage/Packages/HyperText/Util.luau	
+92	1387	2d851290	ReplicatedStorage/Packages/HyperText/Markups/Helpers/AnimAttrsConverters.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/AnimAttrsConverters.luau	
+93	595	fdd092dc	ReplicatedStorage/Packages/HyperText/Markups/Helpers/AppendFlipbookAttrsConverters.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/AppendFlipbookAttrsConverters.luau	
+94	8569	d0b73b4b	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyAnimation.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyAnimation.luau	
+95	2076	0caead6b	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyTrans.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyTrans.luau	
+96	3476	f60e3a33	ReplicatedStorage/Packages/HyperText/Markups/Helpers/EmitImage.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/EmitImage.luau	
+97	1234	f759233b	ReplicatedStorage/Packages/HyperText/Markups/Helpers/EmitImgAttrsConverters.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/EmitImgAttrsConverters.luau	
+98	3840	06605570	ReplicatedStorage/Packages/HyperText/Markups/Helpers/FlipbookEffect.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/FlipbookEffect.luau	
+99	1112	12436838	ReplicatedStorage/Packages/HyperText/Markups/Helpers/GradientAttrsConverters.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/GradientAttrsConverters.luau	
+100	15175	fa828db1	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyGradient.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Helpers/ApplyGradient.luau	
+101	1160	7ae1082c	ReplicatedStorage/Packages/HyperText/Markups/Paired/anim.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/anim.luau	
+102	5814	400025ad	ReplicatedStorage/Packages/HyperText/Markups/Paired/bgImg.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/bgImg.luau	
+103	2102	12a4a045	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearAnim.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearAnim.luau	
+104	418	7a87451c	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearInterval.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearInterval.luau	
+105	1536	a0e008be	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearTransDur.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/clearTransDur.luau	
+106	606	8838928e	ReplicatedStorage/Packages/HyperText/Markups/Paired/color.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/color.luau	
+107	2456	7035863b	ReplicatedStorage/Packages/HyperText/Markups/Paired/decode.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/decode.luau	
+108	1390	d3cc5795	ReplicatedStorage/Packages/HyperText/Markups/Paired/emitImg.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/emitImg.luau	
+109	1497	3150c5de	ReplicatedStorage/Packages/HyperText/Markups/Paired/fog.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/fog.luau	
+110	1657	e7a35fbb	ReplicatedStorage/Packages/HyperText/Markups/Paired/font.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/font.luau	
+111	1212	1c673f16	ReplicatedStorage/Packages/HyperText/Markups/Paired/gradient.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/gradient.luau	
+112	340	8873fe2c	ReplicatedStorage/Packages/HyperText/Markups/Paired/interval.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/interval.luau	
+113	337	2ffc73a1	ReplicatedStorage/Packages/HyperText/Markups/Paired/italic.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/italic.luau	
+114	1002	1704fa25	ReplicatedStorage/Packages/HyperText/Markups/Paired/mark.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/mark.luau	
+115	1671	3460969e	ReplicatedStorage/Packages/HyperText/Markups/Paired/rainbow.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/rainbow.luau	
+116	6706	a55aba56	ReplicatedStorage/Packages/HyperText/Markups/Paired/shadow.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/shadow.luau	
+117	3366	083928f9	ReplicatedStorage/Packages/HyperText/Markups/Paired/shake.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/shake.luau	
+118	1513	61810d3e	ReplicatedStorage/Packages/HyperText/Markups/Paired/shiny.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/shiny.luau	
+119	525	b9e85827	ReplicatedStorage/Packages/HyperText/Markups/Paired/size.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/size.luau	
+120	4043	5187c49e	ReplicatedStorage/Packages/HyperText/Markups/Paired/soundId.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/soundId.luau	
+121	667	fcf80880	ReplicatedStorage/Packages/HyperText/Markups/Paired/strike.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/strike.luau	
+122	2942	a760cdf8	ReplicatedStorage/Packages/HyperText/Markups/Paired/stroke.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/stroke.luau	
+123	1269	c41f083d	ReplicatedStorage/Packages/HyperText/Markups/Paired/strokeGradient.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/strokeGradient.luau	
+124	1161	ac643e59	ReplicatedStorage/Packages/HyperText/Markups/Paired/trans.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/trans.luau	
+125	676	a5bf932e	ReplicatedStorage/Packages/HyperText/Markups/Paired/underline.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/underline.luau	
+126	340	f523583e	ReplicatedStorage/Packages/HyperText/Markups/Paired/weight.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Paired/weight.luau	
+127	281	649befcc	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/ZIndex.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/ZIndex.luau	
+128	307	018f2bea	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/horizontalAlignment.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/horizontalAlignment.luau	
+129	297	cdfe3d48	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/scaleDimension.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/scaleDimension.luau	
+130	297	287e63e0	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/sizeConstraint.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/sizeConstraint.luau	
+131	303	3849cb86	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/verticalAlignment.luau	used	ReplicatedStorage/Packages/HyperText/Markups/Programmatic/verticalAlignment.luau	
+132	1042	37a458e7	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/br.luau	used	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/br.luau	
+133	4147	831398a7	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/img.luau	used	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/img.luau	
+134	798	9a288461	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/renderEvent.luau	used	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/renderEvent.luau	
+135	1168	e50e8546	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/wait.luau	used	ReplicatedStorage/Packages/HyperText/Markups/SelfClosing/wait.luau	
+136	12480	7c859ee9	ReplicatedStorage/Packages/Memoizer.luau	used	ReplicatedStorage/Packages/Memoizer.luau	
+137	16531	b32c09e9	ReplicatedStorage/Packages/Signal.luau	used	ReplicatedStorage/Packages/Signal.luau	
+138	4441	691833c2	ServerScriptService/Main.server.luau	used	ServerScriptService/Main.server.luau	
+139	1230	8cd00fc8	ServerScriptService/WorldSoundApplier.server.luau	used	ServerScriptService/WorldSoundApplier.server.luau	
+140	1992	6f156823	ServerScriptService/BaldiGame/HubTravel.luau	used	ServerScriptService/BaldiGame/HubTravel.luau	
+141	4921	b2865507	ServerScriptService/BaldiGame/AssetResolver.luau	used	ServerScriptService/BaldiGame/AssetResolver.luau	
+142	23880	11ea1a94	ServerScriptService/BaldiGame/ChatReviveAI.luau	used	ServerScriptService/BaldiGame/ChatReviveAI.luau	
+143	3064	96f76e69	ServerScriptService/BaldiGame/DetentionSystem.luau	used	ServerScriptService/BaldiGame/DetentionSystem.luau	
+144	2380	8d98bc1c	ServerScriptService/BaldiGame/ExitDoorManager.luau	used	ServerScriptService/BaldiGame/ExitDoorManager.luau	
+145	19138	b2a08a11	ServerScriptService/BaldiGame/FrostyAI.luau	used	ServerScriptService/BaldiGame/FrostyAI.luau	
+146	24530	e12bc3f9	ServerScriptService/BaldiGame/GameManager.luau	used	ServerScriptService/BaldiGame/GameManager.luau	
+147	20921	11ef3293	ServerScriptService/BaldiGame/ItemEconomy.luau	used	ServerScriptService/BaldiGame/ItemEconomy.luau	
+148	7054	2c194d14	ServerScriptService/BaldiGame/LpAI.luau	used	ServerScriptService/BaldiGame/LpAI.luau	
+149	14694	aeb87fdb	ServerScriptService/BaldiGame/MapResolver.luau	used	ServerScriptService/BaldiGame/MapResolver.luau	
+150	15792	c926a42c	ServerScriptService/BaldiGame/NotebookSpawner.luau	used	ServerScriptService/BaldiGame/NotebookSpawner.luau	
+151	8340	b031297c	_Unused/ServerScriptService/BaldiGame/NpcAnimator.luau	unused	ServerScriptService/BaldiGame/NpcAnimator.luau	ModuleScript never required (NPCs are animated by client-side NpcAnimatorClient)
+152	30489	20a16b82	ServerScriptService/BaldiGame/NpcBase.luau	used	ServerScriptService/BaldiGame/NpcBase.luau	
+153	10227	7c7632f3	ServerScriptService/BaldiGame/NpcFactory.luau	used	ServerScriptService/BaldiGame/NpcFactory.luau	
+154	17650	2ea0fe13	ServerScriptService/BaldiGame/PlaceholderMap.luau	used	ServerScriptService/BaldiGame/PlaceholderMap.luau	
+155	938	a9a004b8	ServerScriptService/BaldiGame/RemoteSetup.luau	used	ServerScriptService/BaldiGame/RemoteSetup.luau	
+156	8403	2fca208f	ServerScriptService/BaldiGame/SilverAI.luau	used	ServerScriptService/BaldiGame/SilverAI.luau	
+157	6746	ee6f0fda	ServerScriptService/BaldiGame/SweeperAI.luau	used	ServerScriptService/BaldiGame/SweeperAI.luau	
+158	17037	1c748f61	ServerScriptService/BaldiGame/PlayerProfiles.luau	used	ServerScriptService/BaldiGame/PlayerProfiles.luau	
+159	10516	8fb7848e	ServerScriptService/BaldiGame/MazeArena.luau	used	ServerScriptService/BaldiGame/MazeArena.luau	
+160	10310	b880d90c	ServerScriptService/BaldiGame/SportageAI.luau	used	ServerScriptService/BaldiGame/SportageAI.luau	
+161	10993	da39f150	ServerScriptService/BaldiGame/GuyAI.luau	used	ServerScriptService/BaldiGame/GuyAI.luau	
+162	3979	b77a5cb0	ServerScriptService/BaldiGame/MatchMap.luau	used	ServerScriptService/BaldiGame/MatchMap.luau	
+163	8634	ccc796c2	ServerScriptService/BaldiGame/MatchServer.luau	used	ServerScriptService/BaldiGame/MatchServer.luau	
+164	11684	922564c8	ServerScriptService/BaldiGame/ChainAI.luau	used	ServerScriptService/BaldiGame/ChainAI.luau	
+165	10587	d0b49e82	ServerScriptService/BaldiGame/BeansAI.luau	used	ServerScriptService/BaldiGame/BeansAI.luau	
+166	2515	87db6cad	ServerScriptService/BaldiGame/DoorService.luau	used	ServerScriptService/BaldiGame/DoorService.luau	
+167	10710	09325152	ServerScriptService/BaldiGame/SimplePath.luau	used	ServerScriptService/BaldiGame/SimplePath.luau	
+168	4559	70ec9a37	ServerScriptService/BaldiGame/VoicelineService.luau	used	ServerScriptService/BaldiGame/VoicelineService.luau	
+169	7687	6137cceb	ServerScriptService/BaldiGame/Badges.luau	used	ServerScriptService/BaldiGame/Badges.luau	
+170	10249	1b5ef679	_Unused/ServerScriptService/BaldiGame/WaypointGraph.luau	unused	ServerScriptService/BaldiGame/WaypointGraph.luau	ModuleScript never required
+171	4083	ec8ecdee	_Duplicates/ServerStorage/SoundWiringBackup/Cosmetics.luau	duplicate	ServerStorage/SoundWiringBackup/Cosmetics.luau	identical to #75 ReplicatedStorage/BaldiShared/Cosmetics.luau
+172	5332	233acd28	_Unused/ServerStorage/SoundWiringBackup/AssetConfig.luau	unused	ServerStorage/SoundWiringBackup/AssetConfig.luau	Backup copy in ServerStorage; never run or required
+173	13578	433756c0	_Unused/ServerStorage/SoundWiringBackup/HudController.luau	unused	ServerStorage/SoundWiringBackup/HudController.luau	Backup copy in ServerStorage; never run or required
+174	4350	b11623a4	_Unused/ServerStorage/SoundWiringBackup/SoundController.luau	unused	ServerStorage/SoundWiringBackup/SoundController.luau	Backup copy in ServerStorage; never run or required
+175	4064	9fe4fb8a	_Unused/ServerStorage/SoundWiringBackup/ChaseTension.luau	unused	ServerStorage/SoundWiringBackup/ChaseTension.luau	Backup copy in ServerStorage; never run or required
+176	10723	2e709ea1	_Unused/ServerStorage/SoundWiringBackup/GuyAI.luau	unused	ServerStorage/SoundWiringBackup/GuyAI.luau	Backup copy in ServerStorage; never run or required
+177	3003	f05447df	_Duplicates/ServerStorage/backups/AssetConfig_PreSounds.luau	duplicate	ServerStorage/backups/AssetConfig_PreSounds.luau	identical to #73 ReplicatedStorage/BaldiShared/AssetConfig.luau
+178	51221	1b4dfa6b	_Unused/ServerStorage/backups/GameConfig_BackupGuy.luau	unused	ServerStorage/backups/GameConfig_BackupGuy.luau	Backup copy in ServerStorage; never run or required
+179	51221	1b4dfa6b	_Duplicates/ServerStorage/backups/GameConfig_PreFail.luau	duplicate	ServerStorage/backups/GameConfig_PreFail.luau	identical to #178 ServerStorage/backups/GameConfig_BackupGuy.luau
+180	8621	1c1d720f	_Unused/ServerStorage/backups/GuyAI_Backup.luau	unused	ServerStorage/backups/GuyAI_Backup.luau	Backup copy in ServerStorage; never run or required
+181	8355	3d04dc0e	_Unused/ServerStorage/backups/GuyAI_PreFail.luau	unused	ServerStorage/backups/GuyAI_PreFail.luau	Backup copy in ServerStorage; never run or required
+182	1337	eab93e7e	_Unused/ServerStorage/backups/GuyRevealFlash_Backup.luau	unused	ServerStorage/backups/GuyRevealFlash_Backup.luau	Backup copy in ServerStorage; never run or required
+183	8796	2f27bb97	_Unused/ServerStorage/backups/GuyRevealFlash_PreFail.luau	unused	ServerStorage/backups/GuyRevealFlash_PreFail.luau	Backup copy in ServerStorage; never run or required
+184	15368	83f5c204	_Unused/ServerStorage/backups/NotebookSpawner_PreFail.luau	unused	ServerStorage/backups/NotebookSpawner_PreFail.luau	Backup copy in ServerStorage; never run or required

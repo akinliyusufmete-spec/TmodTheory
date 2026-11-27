@@ -1,0 +1,195 @@
+--[[
+	StaminaController (ModuleScript, StarterPlayerScripts.BaldiClient.StaminaController)
+
+	Client-managed stamina, exactly per the plan:
+	  - 0..100. Holding sprint (Shift / mobile RUN) while moving drains
+	    10/sec and boosts WalkSpeed 16 -> 24.
+	  - At 0: exhausted — speed snaps back to 16, sprint locks out, bar
+	    flashes red and shakes.
+	  - Regens 6/sec while not sprinting; sprint unlocks again at 30.
+	  - Zesty Bar (StaminaRestore remote): instant 100 + lockout cleared.
+	  - Frosty's SlowMachiner 3000 (applyDebuff): WalkSpeed multiplied for a
+	    while — which also drops sprint speed under LP's radar.
+	  - Frosty's EnergyDrainer-40 (Exhausted remote -> applyExhaustion):
+	    stamina drops to a floor value and recharges slower for a while; the
+	    bar shows the exhausted state until it wears off.
+
+	WalkSpeed is written every Heartbeat. LP's server check reads actual
+	velocity, so sprint speed (24) > threshold (20) > walk speed (16)
+	behaves exactly as designed.
+]]
+
+local RunService = game:GetService("RunService")
+
+local StaminaController = {}
+
+function StaminaController.init(ctx)
+	local cfg = ctx.config.STAMINA
+	local playerCfg = ctx.config.PLAYER
+	local hud = ctx.controllers.HudController
+
+	local self = {
+		stamina = cfg.MAX,
+		exhausted = false,
+		sprintHeld = false,
+		enabled = false,
+		sprintLocked = false, -- detention / Silver's grab
+		debuffMultiplier = 1,
+		debuffUntil = 0,
+		exhaustRegen = 1, -- recharge multiplier while exhaustion lasts
+		exhaustUntil = 0,
+	}
+
+	-- a sweeper carrying us: velocity applied here because the client owns
+	-- its own character's physics (a server write would stutter)
+	local pushVelocity = nil
+	local pushUntil = 0
+
+	local function getHumanoid()
+		local character = ctx.player.Character
+		return character and character:FindFirstChildOfClass("Humanoid") or nil
+	end
+
+	ctx.controllers.InputHandler.onSprint(function(held)
+		self.sprintHeld = held
+	end)
+
+	RunService.Heartbeat:Connect(function(dt)
+		local humanoid = getHumanoid()
+		if not humanoid then
+			return
+		end
+		if not self.enabled then
+			humanoid.WalkSpeed = playerCfg.WALK_SPEED
+			return
+		end
+
+		local debuffActive = os.clock() < self.debuffUntil
+		local multiplier = debuffActive and self.debuffMultiplier or 1
+		local moving = humanoid.MoveDirection.Magnitude > 0.05
+		local sprinting = self.sprintHeld
+			and not self.exhausted
+			and not self.sprintLocked
+			and self.stamina > 0
+			and moving
+
+		if sprinting then
+			self.stamina = self.stamina - cfg.DRAIN_PER_SEC * dt
+			if self.stamina <= 0 then
+				self.stamina = 0
+				self.exhausted = true -- lockout until SPRINT_REENABLE
+				sprinting = false
+			end
+		else
+			local regen = cfg.REGEN_PER_SEC
+			if os.clock() < self.exhaustUntil then
+				regen = regen * self.exhaustRegen
+			end
+			self.stamina = math.min(cfg.MAX, self.stamina + regen * dt)
+		end
+
+		if self.exhausted and self.stamina >= cfg.SPRINT_REENABLE then
+			self.exhausted = false
+		end
+
+		humanoid.WalkSpeed = (sprinting and playerCfg.SPRINT_SPEED or playerCfg.WALK_SPEED) * multiplier
+
+		-- being swept: override horizontal velocity along the push
+		if pushVelocity and os.clock() < pushUntil then
+			local character = ctx.player.Character
+			local hrp = character and character:FindFirstChild("HumanoidRootPart")
+			if hrp and not hrp.Anchored then
+				hrp.AssemblyLinearVelocity = Vector3.new(
+					pushVelocity.X,
+					hrp.AssemblyLinearVelocity.Y,
+					pushVelocity.Z
+				)
+			end
+		end
+
+		local mode = "ok"
+		if self.exhausted or os.clock() < self.exhaustUntil then
+			mode = "exhausted"
+		elseif self.stamina < cfg.LOW_THRESHOLD then
+			mode = "low"
+		end
+		hud.setStamina(self.stamina / cfg.MAX, mode, debuffActive)
+	end)
+
+	-- ===================== API =====================
+
+	-- Zesty Bar: full reset on demand
+	function self.restoreFull()
+		self.stamina = cfg.MAX
+		self.exhausted = false
+		hud.flashStaminaFull()
+		hud.setStamina(1, "ok", os.clock() < self.debuffUntil)
+	end
+
+	-- Frosty's chill
+	function self.applyDebuff(multiplier, duration)
+		self.debuffMultiplier = multiplier
+		self.debuffUntil = os.clock() + duration
+	end
+
+	-- Frosty's EnergyDrainer-40: stamina down to `drainTo`, then it recharges
+	-- at regenMultiplier x the normal rate for `duration` seconds
+	function self.applyExhaustion(duration, drainTo, regenMultiplier)
+		self.stamina = math.min(self.stamina, drainTo)
+		self.exhaustRegen = regenMultiplier
+		self.exhaustUntil = os.clock() + duration
+	end
+
+	function self.setEnabled(enabled)
+		self.enabled = enabled
+		if enabled then
+			self.stamina = cfg.MAX
+			self.exhausted = false
+			self.sprintLocked = false
+			self.debuffUntil = 0
+			self.exhaustUntil = 0
+			hud.setStamina(1, "ok", false)
+		else
+			local humanoid = getHumanoid()
+			if humanoid then
+				humanoid.WalkSpeed = playerCfg.WALK_SPEED
+			end
+		end
+	end
+
+	function self.setSprintLocked(locked)
+		self.sprintLocked = locked
+	end
+
+	ctx.remotes.StaminaRestore.OnClientEvent:Connect(function()
+		self.restoreFull()
+		ctx.controllers.SoundController.play("buy", 1.6)
+	end)
+
+	ctx.remotes.Exhausted.OnClientEvent:Connect(function(duration, drainTo, regenMultiplier)
+		if typeof(duration) ~= "number" or typeof(drainTo) ~= "number" or typeof(regenMultiplier) ~= "number" then
+			return
+		end
+		self.applyExhaustion(duration, drainTo, regenMultiplier)
+	end)
+
+	ctx.remotes.SweptPush.OnClientEvent:Connect(function(direction, speed, duration)
+		if typeof(direction) ~= "Vector3" or typeof(speed) ~= "number" then
+			return
+		end
+		local flat = Vector3.new(direction.X, 0, direction.Z)
+		if flat.Magnitude < 0.01 then
+			return
+		end
+		local wasPushed = pushVelocity ~= nil and os.clock() < pushUntil
+		pushVelocity = flat.Unit * speed
+		pushUntil = os.clock() + (typeof(duration) == "number" and duration or 0.5)
+		if not wasPushed then
+			ctx.controllers.SoundController.play("swept")
+		end
+	end)
+
+	return self
+end
+
+return StaminaController

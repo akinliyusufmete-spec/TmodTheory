@@ -1,0 +1,67 @@
+{
+  "name": "TmodTheory",
+  "emitLegacyScripts": true,
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "$ignoreUnknownInstances": true,
+      "LoadingScreen": {
+        "$path": "ReplicatedFirst/LoadingScreen.client.luau",
+        "$ignoreUnknownInstances": true
+      }
+    },
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "$ignoreUnknownInstances": true,
+      "BaldiShared": {
+        "$path": "ReplicatedStorage/BaldiShared",
+        "$ignoreUnknownInstances": true
+      },
+      "EzUISprings": {
+        "$path": "ReplicatedStorage/EzUISprings",
+        "$ignoreUnknownInstances": true
+      },
+      "Packages": {
+        "$path": "ReplicatedStorage/Packages",
+        "$ignoreUnknownInstances": true
+      }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$ignoreUnknownInstances": true,
+      "Main": {
+        "$path": "ServerScriptService/Main.server.luau",
+        "$ignoreUnknownInstances": true
+      },
+      "WorldSoundApplier": {
+        "$path": "ServerScriptService/WorldSoundApplier.server.luau",
+        "$ignoreUnknownInstances": true
+      },
+      "BaldiGame": {
+        "$path": "ServerScriptService/BaldiGame",
+        "$ignoreUnknownInstances": true
+      }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$ignoreUnknownInstances": true,
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$ignoreUnknownInstances": true,
+        "Main": {
+          "$path": "StarterPlayer/StarterPlayerScripts/Main.client.luau",
+          "$ignoreUnknownInstances": true
+        },
+        "BaldiClient": {
+          "$path": "StarterPlayer/StarterPlayerScripts/BaldiClient",
+          "$ignoreUnknownInstances": true
+        }
+      }
+    }
+  }
+}
