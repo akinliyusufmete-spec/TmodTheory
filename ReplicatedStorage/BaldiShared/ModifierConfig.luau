@@ -7,6 +7,9 @@
 	and client (ModifierMenuController, ModifierClient + BaldiClient/Modifiers/*)
 	both read it. Tune numbers here; no logic lives in this file.
 
+	icon = the card sprite (an Image asset id) shown in the panel's optional
+	`Icon` image on each card.
+
 	Ids double as the asset folder names under
 	ReplicatedStorage.BaldiShared.BaldiAssets.Modifiers.<id> (see
 	MODIFIER_ASSETS.md) and as the module names under BaldiGame/Modifiers and
@@ -52,6 +55,7 @@ ModifierConfig.ORDER = {
 ModifierConfig.LIST = {
 	Frenzy = {
 		name = "Frenzy",
+		icon = "rbxassetid://139763262026608", -- card sprite
 		description = "Everyone moves almost twice as fast. Zesty Bars give an extra burst of speed.",
 		type = "Regular",
 		bonusPct = 10,
@@ -62,6 +66,7 @@ ModifierConfig.LIST = {
 	},
 	Toji = {
 		name = "You're not.. TOJI-KUN!!!",
+		icon = "rbxassetid://83774687425000", -- card sprite
 		description = "You're far faster and get faster with every notebook. Get close to a character and it shatters like glass for a moment.",
 		type = "Regular",
 		bonusPct = 2,
@@ -79,6 +84,7 @@ ModifierConfig.LIST = {
 	},
 	PresidentialTortoise = {
 		name = "Presidential Tortoise",
+		icon = "rbxassetid://126737004388827", -- card sprite
 		description = "Everyone crawls — but you speed up with each notebook. A presidential turtle follows you the whole run. Don't let it touch you.",
 		type = "Regular",
 		bonusPct = 14,
@@ -92,18 +98,21 @@ ModifierConfig.LIST = {
 	},
 	ColorInversion = {
 		name = "Color Inversion",
+		icon = "rbxassetid://88719752627345", -- card sprite
 		description = "The colors of the world are inverted.",
 		type = "Regular",
 		bonusPct = 1,
 	},
 	SeeMoon = {
 		name = "See Moon",
+		icon = "rbxassetid://119693730899742", -- card sprite
 		description = "The whole world is mirrored left to right.",
 		type = "Regular",
 		bonusPct = 9,
 	},
 	StillYou = {
 		name = "\"It's still you.\"",
+		icon = "rbxassetid://79020522253998", -- card sprite
 		description = "After your first notebook, an inverted copy of you retraces your steps a few seconds behind. Touching it scrambles your controls.",
 		type = "Regular",
 		bonusPct = 8,
@@ -114,6 +123,7 @@ ModifierConfig.LIST = {
 	},
 	EvilTheory = {
 		name = "EVIL Theory",
+		icon = "rbxassetid://103971994877470", -- card sprite
 		description = "Every character has an evil twin.",
 		type = "Regular",
 		bonusPct = 20,
@@ -122,6 +132,7 @@ ModifierConfig.LIST = {
 	},
 	GrandBully = {
 		name = "Grand Bully",
+		icon = "rbxassetid://79916161469880", -- card sprite
 		description = "You can punch characters to stun them — but LP sees everything and comes for you. ChatRevive is a little faster.",
 		type = "Regular",
 		bonusPct = 6,
@@ -134,6 +145,7 @@ ModifierConfig.LIST = {
 	},
 	Randomizer = {
 		name = "Randomizer",
+		icon = "rbxassetid://121188785689518", -- card sprite
 		description = "Rolls 1 to 66 random modifiers. You find out which when the run starts.",
 		type = "Regular",
 		bonusPct = 0, -- the rolled modifiers carry their own bonus
@@ -141,6 +153,7 @@ ModifierConfig.LIST = {
 	},
 	FireDrill = {
 		name = "Fire Drill",
+		icon = "rbxassetid://137350618095270", -- card sprite
 		description = "You have 3 minutes to escape. Alarms, red lights, shaking halls.",
 		type = "Regular",
 		bonusPct = 16,
@@ -152,6 +165,7 @@ ModifierConfig.LIST = {
 	},
 	SummerClasses = {
 		name = "Summer Classes",
+		icon = "rbxassetid://118226186138106", -- card sprite
 		description = "After the last notebook, extra notebooks keep appearing until you escape. Each one is worth extra Curriculums — and makes the school angrier.",
 		type = "Regular",
 		bonusPct = 0,
@@ -161,6 +175,7 @@ ModifierConfig.LIST = {
 	},
 	CramSchool = {
 		name = "Cram School",
+		icon = "rbxassetid://113119812719801", -- card sprite
 		description = "The school is dark.",
 		type = "Regular",
 		bonusPct = 2,

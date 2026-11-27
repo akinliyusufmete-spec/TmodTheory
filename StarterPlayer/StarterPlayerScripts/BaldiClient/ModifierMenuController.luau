@@ -325,6 +325,11 @@ function ModifierMenuController.init(ctx)
 					bonusText = "1–" .. MAX .. " random"
 				end
 				setText(card:FindFirstChild("Bonus") or warnOnce(path .. ".Bonus"), bonusText)
+				-- optional sprite: an ImageLabel/ImageButton named Icon on the card
+				local icon = card:FindFirstChild("Icon")
+				if def.icon and icon and (icon:IsA("ImageLabel") or icon:IsA("ImageButton")) then
+					icon.Image = def.icon
+				end
 				local toggleButton = child(card, "Toggle", path, "GuiButton")
 				if toggleButton then
 					toggleButton.Activated:Connect(function()
