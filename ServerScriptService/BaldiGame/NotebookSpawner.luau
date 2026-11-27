@@ -14,6 +14,10 @@
 	     minigame it opens (timing bar, math, memory tile, or sequence).
 	  6. ProximityPrompt collect -> starts the notebook's minigame.
 
+	spawnExtra(n) places up to n more ordinary notebooks on nodes that don't
+	hold one (Summer Classes modifier); isExtra(model) tells them apart and
+	they carry the ExtraNotebook attribute. clear() removes them with the rest.
+
 	The gentle spin/bob that makes notebooks read as pickups runs on each
 	CLIENT (NotebookSkinner), driven by the BobPhase / BobSpeed attributes set
 	here — the server never moves a notebook after placing it, so there's no
@@ -21,6 +25,7 @@
 ]]
 
 local CollectionService = game:GetService("CollectionService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local AssetResolver = require(script.Parent.AssetResolver)
@@ -111,7 +116,7 @@ end
 
 function NotebookSpawner.init(ctx)
 	local self = {}
-	local active = {} -- [model] = { kind = string }
+	local active = {} -- [model] = { kind = string, node = BasePart, extra = boolean }
 	local rng = Random.new()
 	local sessions = {} -- [player] = { kind, notebook, position, ... }
 	local minigameCfg  = ctx.config.NOTEBOOK_MINIGAME
@@ -433,73 +438,182 @@ function NotebookSpawner.init(ctx)
 		return count
 	end
 
+	-- The NotebookSpawn nodes inside the ACTIVE map (the classic school or a
+	-- mode's own map, e.g. the maze).
+	local function mapNodes()
+		local nodes = {}
+		for _, node in ipairs(CollectionService:GetTagged("NotebookSpawn")) do
+			if node:IsA("BasePart") and node:IsDescendantOf(ctx.map.root) then
+				table.insert(nodes, node)
+			end
+		end
+		return nodes
+	end
+
+	-- Fisher-Yates shuffle, in place
+	local function shuffle(list)
+		for index = #list, 2, -1 do
+			local swap = rng:NextInteger(1, index)
+			list[index], list[swap] = list[swap], list[index]
+		end
+		return list
+	end
+
+	local function notebookTemplate()
+		return AssetResolver.itemTemplate("Notebook") or buildPlaceholderTemplate()
+	end
+
+	-- Place one live notebook on a spawn node: clone, pivot, disguise as a
+	-- random type, collect prompt, parent, register. `isExtra` marks a Summer
+	-- Classes extra — otherwise it's identical (same prompt, same minigames,
+	-- and collect() still reports to the GameManager).
+	local function placeNotebook(node, template, isExtra)
+		local notebook = AssetResolver.preparePropClone(template)
+		local baseCFrame = CFrame.new(node.Position + Vector3.new(0, 0.8, 0))
+			* CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
+		notebook:PivotTo(baseCFrame)
+
+		-- pick and apply a random type (color + minigame), tag it for the
+		-- client skinner + spin/bob
+		local nbType = self.disguise(notebook, 1)
+		if isExtra then
+			notebook:SetAttribute("ExtraNotebook", true)
+		end
+
+		-- collect prompt
+		local promptParent = notebook:IsA("BasePart") and notebook
+			or notebook.PrimaryPart
+			or notebook:FindFirstChildWhichIsA("BasePart", true)
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ActionText = "Collect"
+		prompt.ObjectText = "Notebook"
+		prompt.HoldDuration = 0
+		prompt.MaxActivationDistance = ctx.config.NOTEBOOK_PROMPT_DISTANCE
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = promptParent
+
+		prompt.Triggered:Connect(function(player)
+			if not active[notebook] then
+				return
+			end
+			if not ctx.manager.isRoundActive() or not ctx.manager.isParticipant(player) then
+				return
+			end
+			if minigameCfg and minigameCfg.ENABLED then
+				if not sessions[player] then
+					startSession(player, notebook)
+				end
+			else
+				collect(player, notebook)
+			end
+		end)
+
+		notebook.Parent = ctx.map.notebooksFolder
+		active[notebook] = {
+			kind = nbType.minigame, -- "timing" | "math" | "memory" | "sequence"
+			node = node, -- the spawn node it occupies (free again once collected)
+			extra = isExtra == true,
+		}
+		return notebook
+	end
+
 	-- Returns how many notebooks were actually placed this round.
 	function self.spawnForRound(countOverride)
 		self.clear()
 
-		local template = AssetResolver.itemTemplate("Notebook") or buildPlaceholderTemplate()
-
-		local nodes = {}
-		for _, node in ipairs(CollectionService:GetTagged("NotebookSpawn")) do
-			if node:IsDescendantOf(ctx.map.root) then
-				table.insert(nodes, node)
-			end
-		end
-
-		-- Fisher-Yates shuffle
-		for index = #nodes, 2, -1 do
-			local swap = rng:NextInteger(1, index)
-			nodes[index], nodes[swap] = nodes[swap], nodes[index]
-		end
+		local template = notebookTemplate()
+		local nodes = shuffle(mapNodes())
 
 		local count = math.min(countOverride or ctx.config.NOTEBOOK_SPAWN_COUNT, #nodes)
 		for index = 1, count do
-			local node = nodes[index]
-
-			local notebook = AssetResolver.preparePropClone(template)
-			local baseCFrame = CFrame.new(node.Position + Vector3.new(0, 0.8, 0))
-				* CFrame.Angles(0, rng:NextNumber(0, math.pi * 2), 0)
-			notebook:PivotTo(baseCFrame)
-
-			-- pick and apply a random type (color + minigame), tag it for the
-			-- client skinner + spin/bob
-			local nbType = self.disguise(notebook, 1)
-
-			-- collect prompt
-			local promptParent = notebook:IsA("BasePart") and notebook
-				or notebook.PrimaryPart
-				or notebook:FindFirstChildWhichIsA("BasePart", true)
-			local prompt = Instance.new("ProximityPrompt")
-			prompt.ActionText = "Collect"
-			prompt.ObjectText = "Notebook"
-			prompt.HoldDuration = 0
-			prompt.MaxActivationDistance = ctx.config.NOTEBOOK_PROMPT_DISTANCE
-			prompt.RequiresLineOfSight = false
-			prompt.Parent = promptParent
-
-			prompt.Triggered:Connect(function(player)
-				if not active[notebook] then
-					return
-				end
-				if not ctx.manager.isRoundActive() or not ctx.manager.isParticipant(player) then
-					return
-				end
-				if minigameCfg and minigameCfg.ENABLED then
-					if not sessions[player] then
-						startSession(player, notebook)
-					end
-				else
-					collect(player, notebook)
-				end
-			end)
-
-			notebook.Parent = ctx.map.notebooksFolder
-			active[notebook] = {
-				kind = nbType.minigame, -- "timing" | "math" | "memory" | "sequence"
-			}
+			placeNotebook(nodes[index], template, false)
 		end
 
 		return count
+	end
+
+	-- A node is taken if a live notebook sits on it, or if any other prop in
+	-- the notebooks folder does (Guy's fake notebook poses on these same
+	-- nodes) — two notebooks stacked on one spot would read as a bug.
+	local OCCUPIED_RADIUS = 4
+	local function occupiedNodes(nodes)
+		local taken = {}
+		for model, info in pairs(active) do
+			if model.Parent and info.node then
+				taken[info.node] = true
+			end
+		end
+		local props = {}
+		for _, child in ipairs(ctx.map.notebooksFolder:GetChildren()) do
+			if not active[child] and (child:IsA("Model") or child:IsA("BasePart")) then
+				table.insert(props, child:GetPivot().Position)
+			end
+		end
+		if #props > 0 then
+			for _, node in ipairs(nodes) do
+				for _, position in ipairs(props) do
+					if (position - node.Position).Magnitude < OCCUPIED_RADIUS then
+						taken[node] = true
+						break
+					end
+				end
+			end
+		end
+		return taken
+	end
+
+	-- distance from a point to the nearest player character (math.huge if none)
+	local function nearestPlayerDistance(position)
+		local best = math.huge
+		for _, player in ipairs(Players:GetPlayers()) do
+			local character = player.Character
+			local hrp = character and character:FindFirstChild("HumanoidRootPart")
+			if hrp then
+				best = math.min(best, (hrp.Position - position).Magnitude)
+			end
+		end
+		return best
+	end
+
+	-- Summer Classes: place up to n more (ordinary) notebooks on free nodes of
+	-- the active map. Nodes away from every player go first, so a replacement
+	-- doesn't pop up right where someone just collected one; close nodes are
+	-- used only when nothing else is free. Returns how many were placed —
+	-- fewer than n (possibly 0) once the map runs out of free nodes.
+	local EXTRA_MIN_PLAYER_DISTANCE = 40
+	function self.spawnExtra(n)
+		n = math.floor(tonumber(n) or 0)
+		if n <= 0 then
+			return 0
+		end
+		local nodes = shuffle(mapNodes())
+		local taken = occupiedNodes(nodes)
+		local far, near = {}, {}
+		for _, node in ipairs(nodes) do
+			if not taken[node] then
+				if nearestPlayerDistance(node.Position) >= EXTRA_MIN_PLAYER_DISTANCE then
+					table.insert(far, node)
+				else
+					table.insert(near, node)
+				end
+			end
+		end
+		for _, node in ipairs(near) do
+			table.insert(far, node)
+		end
+
+		local template = notebookTemplate()
+		local placed = math.min(n, #far)
+		for index = 1, placed do
+			placeNotebook(far[index], template, true)
+		end
+		return placed
+	end
+
+	-- true while `model` is a live Summer Classes extra
+	function self.isExtra(model)
+		local info = active[model]
+		return info ~= nil and info.extra == true
 	end
 
 	ctx.notebookSpawner = self
