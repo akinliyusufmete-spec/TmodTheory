@@ -17,6 +17,11 @@
 	WalkSpeed is written every Heartbeat. LP's server check reads actual
 	velocity, so sprint speed (24) > threshold (20) > walk speed (16)
 	behaves exactly as designed.
+
+	Modifiers: every WalkSpeed written here is multiplied by the LocalPlayer
+	attribute ModSpeedMult (set by the server's ModifierService; 1 / unset =
+	no modifier). This is the ONLY client script that writes the player's
+	WalkSpeed, so the multiplier is applied exactly once, here.
 ]]
 
 local RunService = game:GetService("RunService")
@@ -50,6 +55,31 @@ function StaminaController.init(ctx)
 		return character and character:FindFirstChildOfClass("Humanoid") or nil
 	end
 
+	-- the Modifiers speed multiplier; anything that isn't a sane positive
+	-- number counts as "no modifier"
+	local function modifierMultiplier()
+		local value = ctx.player:GetAttribute("ModSpeedMult")
+		if type(value) == "number" and value > 0 and value < math.huge then
+			return value
+		end
+		return 1
+	end
+
+	-- the speed before the modifier multiplier, as last decided below, so a
+	-- ModSpeedMult change can be applied at once instead of next Heartbeat
+	local baseSpeed = playerCfg.WALK_SPEED
+	local function setSpeed(humanoid, speed)
+		baseSpeed = speed
+		humanoid.WalkSpeed = speed * modifierMultiplier()
+	end
+
+	ctx.player:GetAttributeChangedSignal("ModSpeedMult"):Connect(function()
+		local humanoid = getHumanoid()
+		if humanoid then
+			humanoid.WalkSpeed = baseSpeed * modifierMultiplier()
+		end
+	end)
+
 	ctx.controllers.InputHandler.onSprint(function(held)
 		self.sprintHeld = held
 	end)
@@ -60,7 +90,7 @@ function StaminaController.init(ctx)
 			return
 		end
 		if not self.enabled then
-			humanoid.WalkSpeed = playerCfg.WALK_SPEED
+			setSpeed(humanoid, playerCfg.WALK_SPEED)
 			return
 		end
 
@@ -92,7 +122,7 @@ function StaminaController.init(ctx)
 			self.exhausted = false
 		end
 
-		humanoid.WalkSpeed = (sprinting and playerCfg.SPRINT_SPEED or playerCfg.WALK_SPEED) * multiplier
+		setSpeed(humanoid, (sprinting and playerCfg.SPRINT_SPEED or playerCfg.WALK_SPEED) * multiplier)
 
 		-- being swept: override horizontal velocity along the push
 		if pushVelocity and os.clock() < pushUntil then
@@ -152,7 +182,7 @@ function StaminaController.init(ctx)
 		else
 			local humanoid = getHumanoid()
 			if humanoid then
-				humanoid.WalkSpeed = playerCfg.WALK_SPEED
+				setSpeed(humanoid, playerCfg.WALK_SPEED)
 			end
 		end
 	end
