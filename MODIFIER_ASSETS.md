@@ -40,6 +40,7 @@ For each modifier the code uses `Panel.List.<id>` if you made one, otherwise a c
 | `Title` | TextLabel | the code writes the modifier's name |
 | `Description` | TextLabel | the code writes the description |
 | `Bonus` | TextLabel | the code writes "+X%" |
+| `Icon` | ImageLabel / ImageButton | optional. The code sets its `Image` to the modifier's sprite (the ids are `icon` in `ModifierConfig`). Skipped silently if the card has none |
 | `Toggle` | GuiButton | clicking selects or deselects |
 | `Selected` | GuiObject | shown when selected, hidden when not. Style it however you like |
 
