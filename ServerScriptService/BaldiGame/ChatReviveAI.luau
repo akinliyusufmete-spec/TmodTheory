@@ -69,7 +69,12 @@ local function flat(v)
 	return Vector3.new(v.X, 0, v.Z)
 end
 
-function ChatReviveAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function ChatReviveAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.CHATREVIVE
 	local self = {
 		ctx = ctx,
@@ -90,12 +95,13 @@ function ChatReviveAI.init(ctx)
 	local PATH_LEAVE_DISTANCE = 4 -- further than this from a cached route = re-route
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(255, 90, 80),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHATREVIVE,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.CHATREVIVE + (opts.spawnOffset or Vector3.zero),
 		(ROAM_DASH_SPEED + DASH_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -170,13 +176,22 @@ function ChatReviveAI.init(ctx)
 
 	local function heat()
 		if self.enraged then
-			return 1
+			-- enraged = at least full heat; Summer Classes' extra notebooks
+			-- keep pushing it past 1 (lerpHeat clamps how far that goes)
+			return math.max(1, (ctx.manager and ctx.manager.getHeat and ctx.manager.getHeat()) or 1)
 		end
 		return (ctx.manager and ctx.manager.getHeat and ctx.manager.getHeat()) or 0
 	end
 
+	-- Heat can pass 1 (Summer Classes keeps notebooks coming), so this
+	-- extrapolates past `hot` — but never below half of a falling value (wind-up,
+	-- cooldown, scan interval stay positive) nor above double a rising one.
 	local function lerpHeat(calm, hot)
-		return calm + (hot - calm) * heat()
+		local value = calm + (hot - calm) * heat()
+		if hot < calm then
+			return math.max(value, hot * 0.5)
+		end
+		return math.min(value, hot * 2)
 	end
 
 	local function sightRange()
@@ -197,12 +212,12 @@ function ChatReviveAI.init(ctx)
 		if os.clock() < alertUntil then
 			return cfg.ENRAGED_SIGHT_INTERVAL
 		end
-		return cfg.SIGHT_INTERVAL + (cfg.ENRAGED_SIGHT_INTERVAL - cfg.SIGHT_INTERVAL) * heat()
+		return lerpHeat(cfg.SIGHT_INTERVAL, cfg.ENRAGED_SIGHT_INTERVAL)
 	end
 
 	local function playSlap()
 		pcall(function()
-			self.slapSound.PlaybackSpeed = self.enraged and 1.3 or (0.85 + heat() * 0.45)
+			self.slapSound.PlaybackSpeed = self.enraged and 1.3 or (0.85 + math.min(heat(), 1) * 0.45)
 			self.slapSound:Play()
 		end)
 	end
@@ -656,6 +671,12 @@ function ChatReviveAI.init(ctx)
 		if os.clock() < (base.slowUntil or 0) then
 			speed *= base.slowMultiplier or 1 -- Frosty's slow
 		end
+		-- he dashes on a LinearVelocity, not WalkSpeed, so NpcBase:applySpeed's
+		-- modifier multiplier never reaches him: apply it here (Frenzy, Toji,
+		-- Tortoise, Grand Bully's ChatRevive boost)
+		if ctx.modifiers and not base.ignoreModifiers then
+			speed *= ctx.modifiers.npcSpeedMult(model.Name)
+		end
 		return speed
 	end
 
@@ -940,7 +961,7 @@ function ChatReviveAI.init(ctx)
 		holdStill()
 	end
 
-	ctx.npcs.ChatRevive = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

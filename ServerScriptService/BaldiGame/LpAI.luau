@@ -12,15 +12,21 @@
 	  - On catch: hands the player to DetentionSystem (teleport + lock), then
 	    goes straight back to wandering. Detention escalates each time and the
 	    DETENTION_FORFEIT_AT-th catch ends the run.
+	  - alertTo(player, seconds): a forced chase (Grand Bully's punches). LP
+	    hunts that player for `seconds` whether they run or not, ignoring his
+	    usual give-up rules; it only ends early if he's stunned AND can't see
+	    them. Catching them detains them as usual (and ends the alert).
 
 	Custom rig: ReplicatedStorage/BaldiAssets/Npcs/LP
 	Alert sound: AssetConfig.SOUNDS.whistle (else a built-in ping)
 ]]
 
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
 local NpcFactory = require(script.Parent.NpcFactory)
 local NpcBase = require(script.Parent.NpcBase)
+local NpcRoster = require(script.Parent.NpcRoster)
 local SoundLoader = require(game:GetService("ReplicatedStorage"):WaitForChild("BaldiShared"):WaitForChild("SoundLoader"))
 
 local LpAI = {}
@@ -28,17 +34,23 @@ local LpAI = {}
 local COLOR_BODY = Color3.fromRGB(35, 50, 120)
 local COLOR_HEAD = Color3.fromRGB(225, 200, 170)
 
-function LpAI.init(ctx)
+-- opts (EVIL Theory twin): { suffix = "Evil", spawnOffset = Vector3 } — the
+-- twin registers as ctx.npcs[NAME .. suffix], wears the original's rig and
+-- config, and spawns spawnOffset away from the original
+function LpAI.init(ctx, opts)
+	opts = opts or {}
+	local suffix = opts.suffix or ""
 	local cfg = ctx.config.NPC.LP
 	local self = { ctx = ctx, cfg = cfg }
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = COLOR_BODY,
 		headColor = COLOR_HEAD,
 		tagColor = Color3.fromRGB(120, 150, 255),
 	}, ctx.map.npcFolder)
-	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.LP,
+	local base = NpcBase.new(ctx, model, ctx.map.npcSpawns.LP + (opts.spawnOffset or Vector3.zero),
 		(cfg.ROAM_SPEED + cfg.CHASE_SPEED) / 2)
 	self.base = base
 	self.model = model
@@ -68,7 +80,11 @@ function LpAI.init(ctx)
 		end
 		local velocity = hrp.AssemblyLinearVelocity
 		local flatSpeed = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
-		return flatSpeed > cfg.RUN_DETECT_SPEED
+		-- a speed modifier (Frenzy, Toji, ...) scales the player's walk AND the
+		-- bar, so walking fast under it isn't "running"
+		local player = Players:GetPlayerFromCharacter(hrp.Parent)
+		local mult = (player and tonumber(player:GetAttribute("ModSpeedMult"))) or 1
+		return flatSpeed > cfg.RUN_DETECT_SPEED * mult
 	end
 
 	-- True when LP can perceive this player: line of sight within SIGHT_RANGE,
@@ -93,9 +109,50 @@ function LpAI.init(ctx)
 	local lastScan = 0
 	local cachedTarget = nil
 
+	-- forced chases from alertTo: [player] = os.clock() it expires
+	local forced = {}
+
+	local function isForced(player)
+		local untilAt = forced[player]
+		if not untilAt then
+			return false
+		end
+		if os.clock() >= untilAt or not player.Parent then
+			forced[player] = nil
+			return false
+		end
+		return true
+	end
+
+	-- a forced target LP can go after right now (nearest first), or nil
+	local function forcedTarget()
+		if not ctx.manager or next(forced) == nil then
+			return nil
+		end
+		local best, bestDistance = nil, math.huge
+		for player in pairs(forced) do
+			if isForced(player) and ctx.manager.isTargetable(player)
+				and not ctx.detention.hasImmunity(player) and not ctx.detention.isDetained(player) then
+				local hrp = targetRoot(player)
+				if hrp then
+					local distance = (hrp.Position - base.root.Position).Magnitude
+					if distance < bestDistance then
+						best, bestDistance = player, distance
+					end
+				end
+			end
+		end
+		return best
+	end
+
 	-- nearest player LP currently notices (throttled scan), skipping anyone
-	-- detained or briefly immune after a release
+	-- detained or briefly immune after a release. A forced target (alertTo)
+	-- always comes first.
 	local function findTarget()
+		local alerted = forcedTarget()
+		if alerted then
+			return alerted
+		end
 		if os.clock() - lastScan < cfg.SIGHT_INTERVAL then
 			return cachedTarget
 		end
@@ -141,6 +198,16 @@ function LpAI.init(ctx)
 				local hrp = targetRoot(player)
 				if not hrp or not ctx.manager.isTargetable(player) or ctx.detention.isDetained(player) then
 					return nil
+				end
+				if isForced(player) then
+					-- alertTo: he knows where they are; no give-up rules
+					lastSeenAt = os.clock()
+					lastKnown = hrp.Position
+					return lastKnown
+				end
+				local alerted = forcedTarget()
+				if alerted and alerted ~= player then
+					return nil -- drop this chase: the brain loop picks up the alerted player
 				end
 				-- keep coming while LP still notices them (sight or proximity);
 				-- losing both for MEMORY_SECONDS calms him back to wandering
@@ -191,17 +258,17 @@ function LpAI.init(ctx)
 		if not base:isActive() or not ctx.manager or not ctx.manager.isRoundActive() then
 			return
 		end
-		local silver = ctx.npcs.Silver
 		for _, player in ipairs(ctx.manager.getTargetablePlayers()) do
 			if not ctx.detention.hasImmunity(player)
 				and not ctx.detention.isDetained(player)
-				and not (silver and silver.isGrabbing(player)) then -- Silver's victim is Silver's
+				and not NpcRoster.any(ctx, "Silver", "isGrabbing", player) then -- Silver's (or her twin's) victim is Silver's
 				local hrp = targetRoot(player)
 				-- only detain a rule-breaker: the player LP flagged for running
 				-- (and is actively chasing), or anyone caught running right now.
 				-- A walker who merely bumps into LP is let off.
 				if hrp and (hrp.Position - base.root.Position).Magnitude < cfg.CATCH_DISTANCE
-					and (player == activeTarget or isBreakingRule(hrp)) then
+					and (player == activeTarget or isForced(player) or isBreakingRule(hrp)) then
+					forced[player] = nil -- caught: the alert is served
 					base:say("Caught", { target = player, force = true })
 					ctx.detention.detain(player, cfg.NAME)
 				end
@@ -209,11 +276,37 @@ function LpAI.init(ctx)
 		end
 	end)
 
+	-- Forced chase (Grand Bully): LP comes for `player` for `seconds`,
+	-- running or not. Re-alerting refreshes the timer. While he's stunned the
+	-- watcher below cancels it once he can't see them.
+	function self.alertTo(player, seconds)
+		if not player or not player.Parent then
+			return
+		end
+		local untilAt = os.clock() + (tonumber(seconds) or 0)
+		local isNew = forced[player] == nil
+		forced[player] = math.max(forced[player] or 0, untilAt)
+		lastScan = 0 -- the brain loop re-scans at once
+		if not isNew then
+			return -- a watcher for this player is already running
+		end
+		task.spawn(function()
+			while forced[player] and isForced(player) do
+				if base:isStunned() and not base:canSee(targetRoot(player), math.huge) then
+					forced[player] = nil
+					break
+				end
+				task.wait(0.2)
+			end
+		end)
+	end
+
 	function self.reset()
+		forced = {} -- a new round starts with no grudges
 		base:resetToSpawn()
 	end
 
-	ctx.npcs.LP = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 

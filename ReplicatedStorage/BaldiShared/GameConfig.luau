@@ -362,6 +362,9 @@ GameConfig.HEAT = {
 	REPATH_FAST = 0.1, -- ChatRevive's repath interval at full heat (from NPC.REPATH_INTERVAL)
 	SWEEPER_WAIT_SCALE = 0.45, -- sweeper rest time shrinks to this fraction at full heat
 	SILVER_SIGHT_BONUS = 18, -- studs added to Silver's sight range at full heat
+	-- heat may exceed 1, up to this, while the Summer Classes modifier is on
+	-- (each extra notebook keeps raising it; the curved heat value stops here)
+	SUMMER_MAX = 1.5,
 }
 
 -- ========== Game modes ==========
@@ -883,6 +886,7 @@ GameConfig.REMOTE_NAMES = {
 	"SaveSettings", -- client persists its preferences (stopwatch toggle, SFX volume)
 	"BuyCosmetic", -- client buys a cosmetic by id
 	"EquipCosmetic", -- client equips an owned cosmetic by id
+	"ModifierPunch", -- Grand Bully modifier: "I threw a punch" (server checks cooldown/range/cone)
 	-- server -> client
 	"GameCountdown",
 	"GameStarted",

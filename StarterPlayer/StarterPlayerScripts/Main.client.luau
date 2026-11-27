@@ -73,7 +73,9 @@ local INIT_ORDER = {
 	"ChaseTension",
 	"GuyRevealFlash",
 	"VoicelineController", -- NPC subtitles (HyperText); after NpcAnimatorClient for line emotes
+	"ModifierClient", -- in-run modifier effects (camera passes, PostEffects); after the HUD/stamina it touches
 	"KeystrokesController",
+	"ModifierMenuController", -- the pre-run modifier panel; MenuController's Play opens it
 	"MenuController",
 }
 

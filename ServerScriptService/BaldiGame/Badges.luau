@@ -13,6 +13,7 @@
 	  onWin(player, info)              escaped: { elapsed, grade, modeId, detentions, wins } (GameManager)
 	  onCaught(player, catcherName)    lost to a character (GameManager)
 	  checkCosmetics(player, owned)    after a shop purchase (PlayerProfiles)
+	  owns(player, key) -> bool        owns badge LIST[key]? (ModifierService unlock; may yield)
 
 	Players who join also get anything their profile already earned (wins,
 	skins bought before badges existed). What each player owns is read once
@@ -85,6 +86,16 @@ function Badges.init(ctx)
 			owned[player] = set -- not after they left: PlayerRemoving already cleaned up
 		end
 		return set
+	end
+
+	-- true if the player owns the badge GameConfig.BADGES.LIST[key]. Reads the
+	-- per-join cache, so the first call for a player may yield while it loads.
+	function self.owns(player, key)
+		local badge = list[key]
+		if not badge or not badge.id or not player or not player.Parent then
+			return false
+		end
+		return ownedSet(player)[badge.id] == true
 	end
 
 	-- ---------- awarding ----------
@@ -174,10 +185,11 @@ function Badges.init(ctx)
 			if (info.wins or 0) >= (cfg.CURRICULUM_WINS or 30) then
 				award(player, "TMOD_CURRICULUM")
 			end
-			if elapsed < (cfg.TWO_MINUTES or 120) then
+			-- time badges need an unmodified run: Frenzy/Toji make them trivial
+			if not info.modified and elapsed < (cfg.TWO_MINUTES or 120) then
 				award(player, "ALL_I_NEED")
 			end
-			if elapsed < (cfg.WIPEOUT_SECONDS or 80) then
+			if not info.modified and elapsed < (cfg.WIPEOUT_SECONDS or 80) then
 				award(player, "PHENOMENAL_WIPEOUT")
 			end
 			if (info.detentions or 0) == 0 then
@@ -266,6 +278,16 @@ function Badges.init(ctx)
 	end)
 
 	ctx.badges = self
+
+	-- Stats sent before now (players already in the server at startup) said
+	-- modifiersUnlocked = false: ModifierService / this module weren't up yet.
+	-- Re-send them now that both can answer.
+	if ctx.profiles and ctx.profiles.sendStats then
+		for _, player in ipairs(Players:GetPlayers()) do
+			task.spawn(ctx.profiles.sendStats, player)
+		end
+	end
+
 	return self
 end
 

@@ -53,7 +53,10 @@ local ROUTE_ACTIVE = SimplePath.StatusType.Active
 
 -- chaseAnimThreshold: WalkSpeed above which the rig's "Chase" animation
 -- plays (omit for characters that never chase).
-function NpcBase.new(ctx, model, spawnCFrame, chaseAnimThreshold)
+-- opts (optional):
+--   ignoreModifiers = true  the run's modifier speed multipliers
+--                           (ctx.modifiers.npcSpeedMult) never touch this NPC
+function NpcBase.new(ctx, model, spawnCFrame, chaseAnimThreshold, opts)
 	local self = setmetatable({}, NpcBase)
 	self.ctx = ctx
 	self.model = model
@@ -67,6 +70,7 @@ function NpcBase.new(ctx, model, spawnCFrame, chaseAnimThreshold)
 	self.slowUntil = 0
 	self.slowMultiplier = 1
 	self.desiredSpeed = 0
+	self.ignoreModifiers = (type(opts) == "table" and opts.ignoreModifiers == true) or false
 	self.rng = Random.new()
 	self.chaseTarget = nil -- set by beginChase while hunting someone
 	self.pushGeneration = 0 -- bumped on reset/park: running BSODA shoves stop
@@ -320,7 +324,26 @@ end
 -- ===================== speed / debuffs =====================
 
 function NpcBase:applySpeed()
+	if self:isStunned() then
+		-- stun froze the walk (WalkSpeed 0); a modifier refresh landing mid-stun
+		-- must not restart it. The stun's own cleanup re-applies the speed.
+		self.humanoid.WalkSpeed = 0
+		return
+	end
 	local multiplier = (os.clock() < self.slowUntil) and self.slowMultiplier or 1
+	-- the run's modifiers (Frenzy, Toji, Tortoise, ...) scale every NPC;
+	-- ModifierService.refreshSpeeds re-runs this whenever they change
+	local modifiers = self.ctx.modifiers
+	local modMult = 1
+	if modifiers and not self.ignoreModifiers then
+		modMult = modifiers.npcSpeedMult(self.model.Name)
+		multiplier *= modMult
+	end
+	-- the client animator divides WalkSpeed by this, so Frenzy's fast roam
+	-- doesn't read as a chase (and Tortoise's crawl doesn't hide one)
+	if self.model:GetAttribute("ModSpeedMult") ~= (modMult ~= 1 and modMult or nil) then
+		self.model:SetAttribute("ModSpeedMult", modMult ~= 1 and modMult or nil)
+	end
 	self.humanoid.WalkSpeed = self.desiredSpeed * multiplier
 end
 

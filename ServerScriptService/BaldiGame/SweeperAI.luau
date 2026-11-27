@@ -52,12 +52,13 @@ local function reversed(list)
 	return out
 end
 
-local function createSweeper(ctx, key, cfg)
+local function createSweeper(ctx, key, cfg, opts)
+	local suffix = opts.suffix or ""
 	local self = { ctx = ctx, cfg = cfg, sweeping = false }
 	local style = STYLES[key] or STYLES.GUIDELINES
 
 	local route = ctx.map.sweepRoutes[cfg.NAME]
-	if not route then
+	if not route and suffix == "" then -- (an EVIL twin shares the route: said once)
 		print(string.format(
 			"[Tmod] No BaldiMap/SweepRoutes/%s folder — %s will charge random waypoints instead. "
 				.. "Add a folder of ordered parts to give it a proper hallway run.",
@@ -72,10 +73,11 @@ local function createSweeper(ctx, key, cfg)
 		local waypoint = ctx.map.waypointsFolder:FindFirstChildWhichIsA("BasePart")
 		spawnPosition = waypoint and waypoint.Position or Vector3.new(0, 1, 0)
 	end
-	local spawnCFrame = CFrame.new(spawnPosition + Vector3.new(0, 2.5, 0))
+	local spawnCFrame = CFrame.new(spawnPosition + Vector3.new(0, 2.5, 0) + (opts.spawnOffset or Vector3.zero))
 
 	local model = NpcFactory.create({
-		name = cfg.NAME,
+		name = cfg.NAME .. suffix,
+		rig = cfg.NAME,
 		bodyColor = style.bodyColor,
 		headColor = style.headColor,
 		tagColor = style.tagColor,
@@ -145,7 +147,9 @@ local function createSweeper(ctx, key, cfg)
 				local rest = rng:NextNumber(cfg.WAIT_MIN, cfg.WAIT_MAX)
 				local heatCfg = ctx.config.HEAT
 				if heatCfg and heatCfg.SWEEPER_WAIT_SCALE and ctx.manager and ctx.manager.getHeat then
-					rest = rest * (1 + (heatCfg.SWEEPER_WAIT_SCALE - 1) * ctx.manager.getHeat())
+					-- floor: Summer Classes can push heat past 1, which would
+					-- otherwise drive the rest to zero or below
+					rest = rest * math.max(1 + (heatCfg.SWEEPER_WAIT_SCALE - 1) * ctx.manager.getHeat(), 0.2)
 				end
 				task.wait(rest)
 			end
@@ -216,14 +220,18 @@ local function createSweeper(ctx, key, cfg)
 		base:resetToSpawn()
 	end
 
-	ctx.npcs[cfg.NAME] = self
+	ctx.npcs[cfg.NAME .. suffix] = self
 	return self
 end
 
-function SweeperAI.init(ctx)
+-- opts (EVIL Theory twins): { suffix = "Evil", spawnOffset = Vector3 } — one
+-- call makes a twin of EVERY sweeper (GuidelinesEvil + SaiEvil), each on its
+-- original's route and rig, starting spawnOffset away from it
+function SweeperAI.init(ctx, opts)
+	opts = opts or {}
 	local sweepers = {}
 	for key, cfg in pairs(ctx.config.NPC.SWEEPERS) do
-		sweepers[key] = createSweeper(ctx, key, cfg)
+		sweepers[key] = createSweeper(ctx, key, cfg, opts)
 	end
 	return sweepers
 end
