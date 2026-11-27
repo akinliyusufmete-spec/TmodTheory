@@ -46,6 +46,7 @@ local BeansAI = require(engine.BeansAI)
 local DetentionSystem = require(engine.DetentionSystem)
 local ItemEconomy = require(engine.ItemEconomy)
 local NotebookSpawner = require(engine.NotebookSpawner)
+local ModifierService = require(engine.ModifierService)
 local ExitDoorManager = require(engine.ExitDoorManager)
 local GameManager = require(engine.GameManager)
 local MatchServer = require(engine.MatchServer)
@@ -64,6 +65,7 @@ local ctx = {
 	notebookSpawner = nil, -- NotebookSpawner
 	exitDoor = nil, -- ExitDoorManager
 	voicelines = nil, -- VoicelineService (NPC lines from CharacterConfig)
+	modifiers = nil, -- ModifierService (the run's modifiers; nil-safe everywhere)
 }
 
 RemoteSetup.init(ctx)
@@ -91,6 +93,7 @@ BeansAI.init(ctx) -- the gum-spitter (Multiplayer/MATCH only; parked elsewhere)
 
 ItemEconomy.init(ctx)
 NotebookSpawner.init(ctx)
+ModifierService.init(ctx) -- after the NPCs/economy its features hook into; before GameManager drives it
 ExitDoorManager.init(ctx)
 GameManager.init(ctx)
 MatchServer.init(ctx) -- after GameManager: seats a Hub-launched party (synced start)

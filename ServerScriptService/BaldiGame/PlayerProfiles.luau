@@ -7,6 +7,7 @@
 	  - bestGrade   -> best report card ("best score")
 	  - recent      -> the last 5 escape times
 	  - binds       -> custom keybinds from the Options page
+	  - modifierLoadout -> the last modifier panel picks ({ [id] = true, Randomizer = n })
 
 	Every DataStore call is pcall-wrapped: in Studio without API access the
 	game still runs, profiles just live for the session. Changes are
@@ -33,6 +34,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Cosmetics = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("Cosmetics"))
+local ModifierConfig = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("ModifierConfig"))
 
 local PlayerProfiles = {}
 
@@ -40,6 +42,30 @@ local GRADE_LADDER = { "A+", "A", "B", "C", "D", "F" }
 
 local function gradeRank(grade)
 	return table.find(GRADE_LADDER, grade) or (#GRADE_LADDER + 1)
+end
+
+-- A modifier panel selection as stored: only real modifier ids set to true,
+-- plus Randomizer as a whole roll count (1..RANDOMIZER_MAX). Returns nil
+-- for anything that isn't a table. Used for both load and save, so a stale
+-- id (a removed modifier) or a forged value never sticks.
+local function sanitizeLoadout(selection)
+	if type(selection) ~= "table" then
+		return nil
+	end
+	local clean = {}
+	for id, value in pairs(selection) do
+		if type(id) == "string" and ModifierConfig.LIST[id] then
+			if id == "Randomizer" then
+				local n = tonumber(value)
+				if n and n == n then -- n == n: not NaN
+					clean.Randomizer = math.clamp(math.floor(n), 1, ModifierConfig.RANDOMIZER_MAX)
+				end
+			elseif value == true or (type(value) == "number" and value > 0) then
+				clean[id] = true -- resolve() also takes a count; stored as plain true
+			end
+		end
+	end
+	return clean
 end
 
 function PlayerProfiles.init(ctx)
@@ -76,6 +102,7 @@ function PlayerProfiles.init(ctx)
 			settings = nil, -- nil = config DEFAULT_SETTINGS (stopwatch, sfxVolume)
 			ownedCosmetics = {}, -- set of purchased cosmetic ids { [id] = true }
 			equippedCosmetics = {}, -- [target] = cosmetic id currently worn
+			modifierLoadout = nil, -- nil = nothing picked yet (see sanitizeLoadout)
 		}
 	end
 
@@ -199,6 +226,7 @@ function PlayerProfiles.init(ctx)
 							end
 						end
 					end
+					profile.modifierLoadout = sanitizeLoadout(stored.modifierLoadout)
 					if type(stored.equippedCosmetics) == "table" then
 						for target, id in pairs(stored.equippedCosmetics) do
 							local cosmetic = Cosmetics.byId(id)
@@ -233,6 +261,7 @@ function PlayerProfiles.init(ctx)
 			settings = profile.settings,
 			ownedCosmetics = profile.ownedCosmetics,
 			equippedCosmetics = profile.equippedCosmetics,
+			modifierLoadout = profile.modifierLoadout,
 		}
 		local stolen = false
 		local ok, err = pcall(function()
@@ -322,7 +351,9 @@ function PlayerProfiles.init(ctx)
 	-- ---------- round results ----------
 
 	-- Returns true when this was the player's FIRST win (modes just unlocked).
-	function self.recordWin(player, elapsed, grade)
+	-- opts.modified: the run had modifiers on. It still counts as a win (and
+	-- for recent times / best grade) but never sets the best time.
+	function self.recordWin(player, elapsed, grade, opts)
 		local profile = self.get(player)
 		local firstWin = profile.wins == 0
 		profile.wins = profile.wins + 1
@@ -330,7 +361,8 @@ function PlayerProfiles.init(ctx)
 		while #profile.recent > 5 do
 			table.remove(profile.recent)
 		end
-		if not profile.bestTime or elapsed < profile.bestTime then
+		local modified = opts ~= nil and opts.modified == true
+		if not modified and (not profile.bestTime or elapsed < profile.bestTime) then
 			profile.bestTime = elapsed
 			bestDirty[player] = true
 		end
@@ -446,6 +478,20 @@ function PlayerProfiles.init(ctx)
 		return true
 	end
 
+	-- ---------- modifier loadout ----------
+
+	-- remember the player's modifier panel picks (GameManager, on a modified start)
+	function self.saveModifierLoadout(player, selection)
+		local clean = sanitizeLoadout(selection)
+		if not clean then
+			return false
+		end
+		local profile = self.get(player)
+		profile.modifierLoadout = clean
+		markDirty(player)
+		return true
+	end
+
 	-- ---------- mobile HUD layout ----------
 
 	local HUD_KEYS = { sprint = true, use = true, swap = true }
@@ -556,6 +602,9 @@ function PlayerProfiles.init(ctx)
 			settings = profile.settings or ctx.config.DEFAULT_SETTINGS,
 			cosmetics = cosmeticPayload(profile),
 			leaderboard = leaderboardCache,
+			-- the modifier panel: may the player use it, and what they picked last
+			modifiersUnlocked = ctx.modifiers and ctx.modifiers.isUnlocked(player) or false,
+			modifierLoadout = profile.modifierLoadout,
 		})
 	end
 

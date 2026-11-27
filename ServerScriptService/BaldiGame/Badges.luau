@@ -13,6 +13,7 @@
 	  onWin(player, info)              escaped: { elapsed, grade, modeId, detentions, wins } (GameManager)
 	  onCaught(player, catcherName)    lost to a character (GameManager)
 	  checkCosmetics(player, owned)    after a shop purchase (PlayerProfiles)
+	  owns(player, key) -> bool        owns badge LIST[key]? (ModifierService unlock; may yield)
 
 	Players who join also get anything their profile already earned (wins,
 	skins bought before badges existed). What each player owns is read once
@@ -85,6 +86,16 @@ function Badges.init(ctx)
 			owned[player] = set -- not after they left: PlayerRemoving already cleaned up
 		end
 		return set
+	end
+
+	-- true if the player owns the badge GameConfig.BADGES.LIST[key]. Reads the
+	-- per-join cache, so the first call for a player may yield while it loads.
+	function self.owns(player, key)
+		local badge = list[key]
+		if not badge or not badge.id or not player or not player.Parent then
+			return false
+		end
+		return ownedSet(player)[badge.id] == true
 	end
 
 	-- ---------- awarding ----------
