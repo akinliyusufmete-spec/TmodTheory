@@ -73,26 +73,58 @@ function MatchServer.init(ctx)
 	end
 
 	-- ---------- return everyone to the Hub when the match ends ----------
+	-- A failed teleport is retried (anyone still here after a try gets sent
+	-- again); if every try fails, players are told and the next match end can
+	-- try once more, so nobody is stranded on a finished match server.
+	local RETURN_TRIES = 3
 	local returning = false
 	function self.returnAllToHub()
 		if returning or RunService:IsStudio() then
 			return
 		end
-		returning = true
 		local hubId = matchCfg.HUB_PLACE_ID
 		if not hubId or hubId == 0 then
 			return
 		end
-		local players = Players:GetPlayers()
-		if #players == 0 then
+		if #Players:GetPlayers() == 0 then
 			return
 		end
+		returning = true
 		task.spawn(function()
-			pcall(function()
-				TeleportService:TeleportAsync(hubId, players)
-			end)
+			for attempt = 1, RETURN_TRIES do
+				local players = Players:GetPlayers()
+				if #players == 0 then
+					return -- everyone made it
+				end
+				local ok, err = pcall(function()
+					TeleportService:TeleportAsync(hubId, players)
+				end)
+				if not ok then
+					warn("[Tmod] Teleport back to the Hub failed (try " .. attempt .. "): " .. tostring(err))
+				end
+				task.wait(attempt * 6) -- a successful teleport takes a few seconds to leave
+			end
+			returning = false
+			if #Players:GetPlayers() > 0 then
+				ctx.remotes.RoundAnnounce:FireAllClients("Couldn't get you back to the Hub — please rejoin from the Hub.")
+			end
 		end)
 	end
+
+	-- a teleport that started but then failed for one player: send them again
+	TeleportService.TeleportInitFailed:Connect(function(player, result, message)
+		if not returning or not player.Parent then
+			return
+		end
+		warn("[Tmod] " .. player.Name .. "'s Hub teleport failed (" .. tostring(result) .. "): " .. tostring(message))
+		task.delay(3, function()
+			if player.Parent and matchCfg.HUB_PLACE_ID then
+				pcall(function()
+					TeleportService:TeleportAsync(matchCfg.HUB_PLACE_ID, { player })
+				end)
+			end
+		end)
+	end)
 
 	-- ================= the synchronized-start gate (reserved servers) =========
 	local function setupSyncGate()

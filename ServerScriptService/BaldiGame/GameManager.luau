@@ -37,6 +37,7 @@ function GameManager.init(ctx)
 	local bestTimes = {} -- [userId] = seconds (session best)
 	local startDebounce = {} -- [player] = next allowed RequestStart time
 	local roundStats = {} -- [player] = { detentions = n, grabs = n }
+	local countdownToken = 0 -- bumped per countdown, so an old countdown's timer can't start a newer round
 
 	-- ===================== report card =====================
 
@@ -353,6 +354,8 @@ function GameManager.init(ctx)
 		currentModeId = modeId or "CLASSIC"
 		local mode = self.getModeConfig()
 		phase = "COUNTDOWN"
+		countdownToken += 1
+		local token = countdownToken
 		notebooksCollected = 0
 		if ctx.loadMap then
 			ctx.loadMap() -- the first run brings the school into the world; it stays from then on
@@ -387,7 +390,9 @@ function GameManager.init(ctx)
 		end
 
 		task.delay(countdownSeconds, function()
-			if phase ~= "COUNTDOWN" then
+			-- the token check: this round's countdown may have been abandoned
+			-- (everyone left) and a NEW countdown started since
+			if phase ~= "COUNTDOWN" or token ~= countdownToken then
 				return
 			end
 			phase = "ACTIVE"
@@ -407,6 +412,14 @@ function GameManager.init(ctx)
 				end
 				fireGameStarted(player)
 				remotes.NotebookCollected:FireClient(player, notebooksCollected, notebooksTotal)
+			end
+			if notebooksTotal <= 0 then
+				-- this map has no notebook spawns: nothing to collect, so wake the
+				-- characters and open the exit now, or the round could never be won
+				warn("[Tmod] No NotebookSpawn points on the active map — opening the exit immediately.")
+				setNpcsPaused(false)
+				ctx.exitDoor.openDoor()
+				remotes.PhaseChanged:FireAllClients("EXIT_OPEN")
 			end
 			checkRoundEnd() -- everyone may have left during the countdown
 		end)
@@ -636,6 +649,9 @@ function GameManager.init(ctx)
 			if participants[player] then
 				participants[player] = nil
 				roundStats[player] = nil
+				-- end any detention now, or its timer would later unanchor the
+				-- respawned character floating on the main screen
+				ctx.detention.releasePlayer(player)
 				if ctx.badges then
 					ctx.badges.noteDown(player)
 				end
@@ -708,7 +724,13 @@ function GameManager.init(ctx)
 			return
 		end
 
-		if phase == "IDLE" then
+		if phase == "IDLE" and ctx.matchServer and ctx.matchServer.isMatchServer() then
+			-- a match server only ever runs the MATCH, which MatchServer starts
+			-- once the party has loaded; a stray PLAY must not start a Classic
+			-- round that would block it
+			remotes.RoundAnnounce:FireClient(player, "Hang tight — the match starts when everyone has loaded in!")
+			return
+		elseif phase == "IDLE" then
 			-- sanitize + gate the requested mode
 			local modeId = (type(requestedModeId) == "string" and config.MODES[requestedModeId])
 				and requestedModeId or "CLASSIC"

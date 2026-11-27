@@ -79,9 +79,12 @@ function Badges.init(ctx)
 			return owned[player] or {}
 		end
 		fetching[player] = true
-		owned[player] = fetchOwned(player)
+		local set = fetchOwned(player)
 		fetching[player] = nil
-		return owned[player]
+		if player.Parent then
+			owned[player] = set -- not after they left: PlayerRemoving already cleaned up
+		end
+		return set
 	end
 
 	-- ---------- awarding ----------
