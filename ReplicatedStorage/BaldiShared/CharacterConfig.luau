@@ -246,6 +246,23 @@ CharacterConfig.Characters = {
 		TextEffect = { interval = 0.03, anim = { "slide", dir = "down", offset = 0.6, rot = 0, dur = 0.2 } },
 		Sounds = { Sweep = "" },
 	},
+
+	-- the Presidential Tortoise modifier's turtle (TortoiseAI). Extra moment:
+	-- Caught is said as it ends someone's run.
+	Tortoise = {
+		DisplayName = "Presidential Tortoise",
+		Voicelines = {
+			Caught = { "By executive order: you're done.", "Slow and steady." },
+		},
+		TextColor = Color3.fromRGB(120, 200, 110),
+		TextAltColor = Color3.fromRGB(235, 225, 160),
+		TextOutlineColor = Color3.fromRGB(20, 45, 20),
+		TextEffect = { interval = 0.06, anim = { "slide", dir = "down", offset = 0.4, rot = 0, dur = 0.5 } },
+		Animations = {
+			Chase = false, -- it never runs: Walk covers everything
+		},
+		WalkAnimSpeed = 4, -- it crawls, so Walk plays at normal speed this slow
+	},
 }
 
 -- How characters talk (read by VoicelineService on the server and
