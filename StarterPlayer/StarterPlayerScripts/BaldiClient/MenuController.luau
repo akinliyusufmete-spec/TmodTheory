@@ -56,6 +56,8 @@ function MenuController.init(ctx)
 	local keystrokes = ctx.controllers.KeystrokesController
 	local cosmeticState = ctx.controllers.CosmeticState
 	local CosmeticsLib = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("Cosmetics"))
+	local ModifierConfig = require(ReplicatedStorage:WaitForChild("BaldiShared"):WaitForChild("ModifierConfig"))
+	local modifierMenu = ctx.controllers.ModifierMenuController -- nil if it isn't in INIT_ORDER
 	local self = { inRound = false }
 
 	local gui = fx.gui("MainMenuGui")
@@ -260,7 +262,8 @@ function MenuController.init(ctx)
 			local camera = Workspace.CurrentCamera
 			if camera then
 				camera.CameraType = Enum.CameraType.Custom
-				camera.FieldOfView = 70
+				-- a modifier (Frenzy) can set the run's FOV through this attribute
+				camera.FieldOfView = tonumber(ctx.player:GetAttribute("ModFov")) or 70
 			end
 		end
 	end
@@ -357,6 +360,10 @@ function MenuController.init(ctx)
 			return
 		end
 		local frames = SCREENS[name] or {}
+		-- the modifier panel never lingers over a different screen
+		if modifierMenu and modifierMenu.isOpen() then
+			modifierMenu.close()
+		end
 		fx.transition(function()
 			setScreen(name)
 			playEntry(name, WIPE_DELAY)
@@ -1160,9 +1167,30 @@ function MenuController.init(ctx)
 
 	local lastModeId = "CLASSIC" -- so RETRY restarts the mode you just played
 
+	-- Unlocked players starting a mode that takes modifiers (Classic) get the
+	-- modifier panel first; its Start sends the run request with the picks.
+	-- Without the panel GUI, or before unlocking, Play starts a normal run.
+	local warnedNoPanel = false
 	local function requestStart(modeId)
+		modeId = modeId or "CLASSIC"
 		sounds.play("click")
-		ctx.remotes.RequestStart:FireServer(modeId or "CLASSIC")
+		if modifierMenu and ModifierConfig.MODES[modeId] and modifierMenu.isUnlocked() then
+			if modifierMenu.isAvailable() then
+				local opened = modifierMenu.open(modeId, function(selection)
+					if self.inRound then
+						return
+					end
+					ctx.remotes.RequestStart:FireServer(modeId, selection)
+				end)
+				if opened then
+					return
+				end
+			elseif not warnedNoPanel then
+				warnedNoPanel = true
+				warn("[Tmod] Modifiers are unlocked but StarterGui.ModifiersGui isn't usable (see MODIFIER_ASSETS.md) — starting a normal run.")
+			end
+		end
+		ctx.remotes.RequestStart:FireServer(modeId)
 	end
 
 	-- ===================== title + mode buttons =====================
