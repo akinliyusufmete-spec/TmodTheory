@@ -159,7 +159,9 @@ function GrandBully.start(env, _count)
 			return Enum.ContextActionResult.Pass
 		end
 		punch(env)
-		return Enum.ContextActionResult.Sink
+		-- Pass, not Sink: the same click must still reach world ClickDetectors
+		-- (item pickups) and minigame bars
+		return Enum.ContextActionResult.Pass
 	end, false, Enum.UserInputType.MouseButton1, Enum.KeyCode.ButtonR2)
 
 	-- the HUD may still be arriving: look it up without blocking start

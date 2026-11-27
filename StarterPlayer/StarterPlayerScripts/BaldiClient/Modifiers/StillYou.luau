@@ -446,6 +446,7 @@ function StillYou.start(env, _count)
 		buffer = {}, -- { t, cf, tracks }, oldest first
 		clone = nil,
 		armed = false, -- true once the first notebook is in
+		armedAt = math.huge, -- os.clock() it armed: only history after this is replayed
 		respawnAt = 0, -- os.clock() before which the clone stays away
 		nextBuildAt = 0,
 		invert = nil,
@@ -455,8 +456,15 @@ function StillYou.start(env, _count)
 
 	local function readNotebooks()
 		local collected = workspace:GetAttribute("NotebooksCollected")
+		local wasArmed = s.armed
 		s.armed = type(collected) == "number" and collected >= 1
+		if s.armed and not wasArmed then
+			-- the last few seconds of history are you standing at the notebook
+			-- (minigame): replaying them would hit you the instant it arms
+			s.armedAt = os.clock()
+		end
 		if not s.armed then
+			s.armedAt = math.huge
 			destroyClone(s) -- a fresh run reset the count
 		end
 	end
@@ -504,6 +512,10 @@ function StillYou.step(env, _dt)
 	end
 
 	if not s.armed or now < s.respawnAt then
+		return
+	end
+	if now - def.DELAY < s.armedAt then
+		destroyClone(s) -- still replaying pre-arming history: stay out of the way
 		return
 	end
 

@@ -444,6 +444,14 @@ function ModifierMenuController.init(ctx)
 		end
 	end)
 
+	-- the server's first StatsData may have gone out before this controller
+	-- listened (or before modifiers were unlock-checkable): ask again
+	if ctx.remotes.StatsRequest then
+		task.delay(2, function()
+			ctx.remotes.StatsRequest:FireServer()
+		end)
+	end
+
 	return self
 end
 

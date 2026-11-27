@@ -77,7 +77,10 @@ local function runTrackLoop(model, humanoid, loader, state)
 				local wanted
 				if speed < MOVING_THRESHOLD then
 					wanted = "Idle"
-				elseif humanoid.WalkSpeed > (model:GetAttribute("ChaseAnimSpeed") or DEFAULT_CHASE_SPEED) then
+				-- compare the unmodified speed: modifiers scale WalkSpeed
+				-- (the server publishes the factor as ModSpeedMult)
+				elseif humanoid.WalkSpeed / (tonumber(model:GetAttribute("ModSpeedMult")) or 1)
+					> (model:GetAttribute("ChaseAnimSpeed") or DEFAULT_CHASE_SPEED) then
 					wanted = "Chase"
 				else
 					wanted = "Walk"

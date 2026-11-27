@@ -20,6 +20,9 @@
 
 local Players = game:GetService("Players")
 
+-- this feature lives in BaldiGame/Modifiers; the roster helper is one level up
+local NpcRoster = require(script.Parent.Parent.NpcRoster)
+
 local GrandBully = {}
 
 local lastPunch = {} -- [player] = os.clock() of their last accepted punch
@@ -82,9 +85,11 @@ local function onPunch(env, player)
 
 	target.base:stun(def.STUN_SECONDS, targetDirection)
 
-	local lp = ctx.npcs.LP
-	if lp and type(lp.alertTo) == "function" then
-		lp.alertTo(player, def.LP_ALERT_SECONDS)
+	-- every LP comes for you: the original and, under EVIL Theory, his twin
+	for _, lp in ipairs(NpcRoster.named(ctx, "LP")) do
+		if type(lp.alertTo) == "function" and not (lp.base and lp.base.parked) then
+			lp.alertTo(player, def.LP_ALERT_SECONDS)
+		end
 	end
 end
 

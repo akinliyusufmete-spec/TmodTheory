@@ -334,8 +334,15 @@ function NpcBase:applySpeed()
 	-- the run's modifiers (Frenzy, Toji, Tortoise, ...) scale every NPC;
 	-- ModifierService.refreshSpeeds re-runs this whenever they change
 	local modifiers = self.ctx.modifiers
+	local modMult = 1
 	if modifiers and not self.ignoreModifiers then
-		multiplier *= modifiers.npcSpeedMult(self.model.Name)
+		modMult = modifiers.npcSpeedMult(self.model.Name)
+		multiplier *= modMult
+	end
+	-- the client animator divides WalkSpeed by this, so Frenzy's fast roam
+	-- doesn't read as a chase (and Tortoise's crawl doesn't hide one)
+	if self.model:GetAttribute("ModSpeedMult") ~= (modMult ~= 1 and modMult or nil) then
+		self.model:SetAttribute("ModSpeedMult", modMult ~= 1 and modMult or nil)
 	end
 	self.humanoid.WalkSpeed = self.desiredSpeed * multiplier
 end

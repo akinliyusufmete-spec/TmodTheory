@@ -185,10 +185,11 @@ function Badges.init(ctx)
 			if (info.wins or 0) >= (cfg.CURRICULUM_WINS or 30) then
 				award(player, "TMOD_CURRICULUM")
 			end
-			if elapsed < (cfg.TWO_MINUTES or 120) then
+			-- time badges need an unmodified run: Frenzy/Toji make them trivial
+			if not info.modified and elapsed < (cfg.TWO_MINUTES or 120) then
 				award(player, "ALL_I_NEED")
 			end
-			if elapsed < (cfg.WIPEOUT_SECONDS or 80) then
+			if not info.modified and elapsed < (cfg.WIPEOUT_SECONDS or 80) then
 				award(player, "PHENOMENAL_WIPEOUT")
 			end
 			if (info.detentions or 0) == 0 then
@@ -277,6 +278,16 @@ function Badges.init(ctx)
 	end)
 
 	ctx.badges = self
+
+	-- Stats sent before now (players already in the server at startup) said
+	-- modifiersUnlocked = false: ModifierService / this module weren't up yet.
+	-- Re-send them now that both can answer.
+	if ctx.profiles and ctx.profiles.sendStats then
+		for _, player in ipairs(Players:GetPlayers()) do
+			task.spawn(ctx.profiles.sendStats, player)
+		end
+	end
+
 	return self
 end
 

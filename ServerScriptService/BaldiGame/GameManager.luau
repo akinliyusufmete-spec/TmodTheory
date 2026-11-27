@@ -832,7 +832,9 @@ function GameManager.init(ctx)
 			if ctx.modifiers then
 				stacks, rolled = ctx.modifiers.resolve(player, selection, modeId)
 			end
-			if stacks and ctx.profiles and ctx.profiles.saveModifierLoadout then
+			-- save even an empty pick (cleared panel), so old picks don't return
+			if type(selection) == "table" and ctx.profiles and ctx.profiles.saveModifierLoadout
+				and ctx.modifiers and ctx.modifiers.isUnlocked(player) then
 				-- remember the panel picks (raw, re-sanitized by the profile)
 				ctx.profiles.saveModifierLoadout(player, selection)
 			end
@@ -848,6 +850,10 @@ function GameManager.init(ctx)
 			remotes.RoundAnnounce:FireClient(player,
 				"A single-player round is in progress — hang tight!")
 		elseif phase == "COUNTDOWN" then
+			if type(selection) == "table" and next(selection) then
+				remotes.RoundAnnounce:FireClient(player,
+					"A run is already starting — you're joining it, so your modifiers aren't used.")
+			end
 			participants[player] = true
 			roundStats[player] = { detentions = 0, grabs = 0 }
 			teleportToRoundSpawn(player, true)
@@ -857,6 +863,10 @@ function GameManager.init(ctx)
 			remotes.GameCountdown:FireClient(player,
 				self.getModeConfig().COUNTDOWN or config.COUNTDOWN_SECONDS)
 		else -- ACTIVE: join the round in progress
+			if type(selection) == "table" and next(selection) then
+				remotes.RoundAnnounce:FireClient(player,
+					"A run is in progress — you're joining it, so your modifiers aren't used.")
+			end
 			joinActiveRound(player)
 		end
 	end)

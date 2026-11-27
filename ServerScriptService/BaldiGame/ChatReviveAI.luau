@@ -176,7 +176,9 @@ function ChatReviveAI.init(ctx, opts)
 
 	local function heat()
 		if self.enraged then
-			return 1
+			-- enraged = at least full heat; Summer Classes' extra notebooks
+			-- keep pushing it past 1 (lerpHeat clamps how far that goes)
+			return math.max(1, (ctx.manager and ctx.manager.getHeat and ctx.manager.getHeat()) or 1)
 		end
 		return (ctx.manager and ctx.manager.getHeat and ctx.manager.getHeat()) or 0
 	end
